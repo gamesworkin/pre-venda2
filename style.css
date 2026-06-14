@@ -15,7 +15,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Gerenciador de Exibição das Telas (Views) */
 .view {
     display: none;
     min-height: 100vh;
@@ -83,7 +82,6 @@ input:focus, textarea:focus, select:focus {
     box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
 }
 
-/* Header das Dashboards */
 .app-header {
     background-color: #121824;
     border-bottom: 2px solid #1f2a3c;
@@ -101,6 +99,7 @@ input:focus, textarea:focus, select:focus {
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
+    margin-top: 10px;
     transition: 0.2s;
 }
 
@@ -199,7 +198,6 @@ input:focus, textarea:focus, select:focus {
     max-width: 300px;
 }
 
-/* Modal do Formulário de Upload */
 .modal-form {
     display: none;
     position: fixed;
@@ -250,7 +248,6 @@ input:focus, textarea:focus, select:focus {
     margin-bottom: 15px;
 }
 
-/* Área de Drop Zone */
 .drop-zone {
     border: 2px dashed #242f41;
     background-color: #161c26;
@@ -279,7 +276,6 @@ input:focus, textarea:focus, select:focus {
     color: #00ff66;
 }
 
-/* Grid de Cards de Jogos */
 .hub-jogos h2 {
     margin-bottom: 20px;
     border-left: 4px solid #00ff66;
@@ -292,7 +288,6 @@ input:focus, textarea:focus, select:focus {
     gap: 25px;
 }
 
-/* Estilo do Card individual */
 .game-card {
     background-color: #121824;
     border: 2px solid #1f2a3c;
@@ -362,7 +357,6 @@ input:focus, textarea:focus, select:focus {
     gap: 10px;
 }
 
-/* Lista de Usuários no Painel Admin */
 .lista-usuarios {
     display: flex;
     flex-direction: column;
@@ -396,6 +390,26 @@ input:focus, textarea:focus, select:focus {
     font-weight: bold;
     cursor: pointer;
     width: 100%;
+}
+
+.btn-visualizar-comprovante {
+    background: #1f2a3c;
+    border: 1px solid #ffaa00;
+    color: #ffaa00;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin: 8px 0 12px 0;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.btn-visualizar-comprovante:hover {
+    background: #ffaa00;
+    color: #000;
+    box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
 }
 
 /* ==========================================================================
@@ -516,24 +530,4 @@ input:focus, textarea:focus, select:focus {
 @keyframes scaleUp {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
-}
-/* Botão Otimizado para o Admin Auditar Comprovantes */
-.btn-visualizar-comprovante {
-    background: #1f2a3c;
-    border: 1px solid #ffaa00;
-    color: #ffaa00;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 0.85rem;
-    margin: 8px 0 12px 0;
-    width: 100%;
-    transition: all 0.2s ease;
-}
-
-.btn-visualizar-comprovante:hover {
-    background: #ffaa00;
-    color: #000;
-    box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
 }
