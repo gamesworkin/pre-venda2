@@ -57,7 +57,6 @@ body {
     background: linear-gradient(135deg, #33ff88 0%, #00ff66 100%);
 }
 
-/* Variante Ouro para botão de Recorrência/Nova Compra */
 .btn-nova-compra {
     background: linear-gradient(135deg, #ffaa00 0%, #e67700 100%) !important;
     color: #ffffff !important;
@@ -68,7 +67,6 @@ body {
     box-shadow: 0 6px 20px rgba(255, 153, 0, 0.5) !important;
 }
 
-/* Botão Link de Recuperação de Senha */
 .forget-password-container {
     margin-top: 15px;
     text-align: right;
@@ -238,16 +236,6 @@ input:focus, textarea:focus, select:focus {
 
 .modal-form.active {
     display: flex;
-}
-
-.modal-form-content {
-    background-color: #121824;
-    border: 2px solid #242f41;
-    width: 100%;
-    max-width: 500px;
-    border-radius: 10px;
-    padding: 25px;
-    animation: scaleUp 0.3s ease;
 }
 
 .modal-form-content {
@@ -557,7 +545,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ==========================================================================
-   MEDIA QUERIES - BLINDAGEM MOBILE COMPLETA (Telas até 650px)
+   MEDIA QUERIES - BLINDAGEM MOBILE COMPLETA
    ========================================================================== */
 @media (max-width: 650px) {
     .modal-content {
