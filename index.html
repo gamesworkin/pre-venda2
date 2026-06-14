@@ -5,16 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamHub - Bomba Patch</title>
     
+    <!-- Link do Favicon apontando para a raiz do repositório -->
     <link rel="icon" type="image/x-icon" href="fav.ico">
     
+    <!-- Link para o arquivo CSS Externo -->
     <link rel="stylesheet" href="style.css">
     
+    <!-- Scripts do Firebase (SDKs Necessários) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
+    <!-- ========================================== -->
+    <!-- TELA 1: LOGIN / CADASTRO                   -->
+    <!-- ========================================== -->
     <div id="view-auth" class="view active">
         <div class="auth-container">
             <h2>ÁREA DO JOGADOR</h2>
@@ -23,12 +29,19 @@
                 <button id="tab-cadastro" class="tab-btn">Criar Conta</button>
             </div>
             
+            <!-- Formulário de Login -->
             <form id="form-login" class="auth-form active">
                 <input type="email" id="login-email" placeholder="Seu E-mail" required>
                 <input type="password" id="login-senha" placeholder="Sua Senha" required>
-                <button type="submit" class="btn-gamer">LOGAR NO HUB</button>
+                <button type="submit" id="btn-logar" class="btn-gamer">LOGAR NO HUB</button>
+                
+                <!-- NOVO: Link de Recuperação de Senha -->
+                <div class="forget-password-container">
+                    <button type="button" id="btn-esqueci-senha" class="btn-link">Esqueci minha senha</button>
+                </div>
             </form>
 
+            <!-- Formulário de Cadastro -->
             <form id="form-cadastro-auth" class="auth-form">
                 <input type="text" id="cad-nome" placeholder="Nome" required>
                 <input type="text" id="cad-sobrenome" placeholder="Sobrenome" required>
@@ -40,6 +53,9 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- TELA 2: DASHBOARD DO CLIENTE               -->
+    <!-- ========================================== -->
     <div id="view-cliente" class="view">
         <header class="app-header">
             <span>Jogador: <strong id="user-display-name">...</strong></span>
@@ -47,12 +63,14 @@
         </header>
 
         <div class="container">
-            <div id="area-compra-pendente" class="box-alerta">
-                <h3>Garante as novas atualizações!</h3>
-                <p>Envie o seu novo comprovante para liberar mais jogos no seu painel.</p>
+            <!-- Central de Compras Inteligente Dinâmica -->
+            <div id="area-compra-pendente" class="box-alerta" style="display: none;">
+                <h3 id="texto-alerta-titulo">Garante as novas atualizações!</h3>
+                <p id="texto-alerta-desc">Envie o seu novo comprovante para liberar mais jogos no seu painel.</p>
                 <button id="btn-abrir-formulario" class="btn-gamer">Adquira já o seu jogo</button>
             </div>
 
+            <!-- MODAL INTERNO: FORMULÁRIO DE ENVIO -->
             <div id="modal-formulario-envio" class="modal-form">
                 <div class="modal-form-content">
                     <div class="modal-form-header">
@@ -74,14 +92,19 @@
                 </div>
             </div>
 
+            <!-- HUB DE JOGOS LIBERADOS -->
             <main class="hub-jogos">
                 <h2>Seus Jogos Liberados</h2>
                 <div id="grid-cards-cliente" class="grid-cards">
-                    </div>
+                    <!-- Cards injetados dinamicamente via JS -->
+                </div>
             </main>
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- TELA 3: PAINEL ADMINISTRATIVO              -->
+    <!-- ========================================== -->
     <div id="view-admin" class="view">
         <header class="app-header">
             <h2>PAINEL DE CONTROLE ADMIN</h2>
@@ -89,6 +112,7 @@
         </header>
 
         <div class="container admin-grid">
+            <!-- Painel Esquerdo: Criação e Edição de Cards -->
             <section class="admin-box">
                 <h3 id="titulo-form-card">1. Criar Novo Card de Jogo</h3>
                 <form id="form-criar-card">
@@ -127,10 +151,12 @@
                         <button id="btn-exportar-cards" class="btn-visualizar-comprovante" style="width:auto; margin:0; padding:6px 12px;">📥 Exportar (JSON)</button>
                     </div>
                     <div id="lista-cards-criados" class="lista-usuarios">
-                        </div>
+                        <!-- Cards injetados via JS -->
+                    </div>
                 </div>
             </section>
 
+            <!-- Painel Direito: Gerenciamento Qualificado de Usuários/Pedidos -->
             <section class="admin-box">
                 <h3>2. Controle de Usuários e Pedidos</h3>
                 
@@ -140,11 +166,13 @@
                 </div>
                 
                 <div id="lista-usuarios-admin" class="lista-usuarios">
-                    </div>
+                    <!-- Clientes filtrados injetados via JS -->
+                </div>
             </section>
         </div>
     </div>
 
+    <!-- JANELA FLUTUANTE (MODAL DETALHES DO JOGO) -->
     <div id="modal-detalhes-jogo" class="modal-jogos">
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModalJogo()">&times;</span>
@@ -154,12 +182,14 @@
                     <h3 id="modal-jogo-titulo">Título</h3>
                     <p id="modal-jogo-descricao">Descrição</p>
                     <div id="modal-jogo-botoes" class="area-botoes-download">
-                        </div>
+                        <!-- Botões de Download -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Link para o script JS Externo -->
     <script src="script.js"></script>
 </body>
 </html>
