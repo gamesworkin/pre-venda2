@@ -15,7 +15,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
 
-// URL do seu Web App do Google Sheets (Mantido para fins de backup)
 const GOOGLE_WEB_APP_URL = "COLE_AQUI_O_LINK_DO_APP_DA_WEB_DO_GOOGLE";
 
 // Elementos HTML
@@ -31,9 +30,9 @@ const inputWhatsApp = document.getElementById('cad-whatsapp');
 
 let usuarioLogadoUid = null;
 let dadosClienteAtual = {};
-let filtroAdminAtual = "pendentes"; // Controla qual aba de clientes está ativa: 'pendentes' ou 'concluidos'
+let filtroAdminAtual = "pendentes";
 
-// Máscara WhatsApp em tempo real: (00) 00000-0000
+// Máscara WhatsApp
 inputWhatsApp.addEventListener('input', (e) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
@@ -43,10 +42,9 @@ inputWhatsApp.addEventListener('input', (e) => {
     e.target.value = value;
 });
 
-// Filtro cirúrgico de provedores convencionais
 function validarProvedorEmail(email) {
     const emailLimpo = email.trim().toLowerCase();
-    if (emailLimpo === "teste@teste.com") return true; // Exceção autorizada
+    if (emailLimpo === "teste@teste.com") return true;
     const provedoresValidos = ["gmail.com", "hotmail.com", "outlook.com", "outlook.com.br", "yahoo.com", "yahoo.com.br", "icloud.com", "live.com", "uol.com.br", "terra.com.br", "bol.com.br"];
     const dominio = emailLimpo.split('@')[1];
     return provedoresValidos.includes(dominio);
@@ -70,10 +68,10 @@ document.getElementById('tab-cadastro').addEventListener('click', () => {
     document.getElementById('form-cadastro-auth').classList.add('active');
     document.getElementById('form-login').classList.remove('active');
     document.getElementById('tab-cadastro').classList.add('active');
-    document.getElementById('tab-login').classList.remove('active');
+    document.getElementById('tab-login').classList.add('active');
 });
 
-// Chaves de Abas do Gerenciador de Clientes (Admin)
+// Chaves de Abas Admin
 document.getElementById('tab-solic-pendentes').addEventListener('click', () => {
     filtroAdminAtual = "pendentes";
     document.getElementById('tab-solic-pendentes').classList.add('active');
@@ -88,7 +86,7 @@ document.getElementById('tab-solic-concluidos').addEventListener('click', () => 
 });
 
 // ==========================================================================
-// MONITOR DE SESSÃO (FLUXO CONTÍNUO DE COMPRAS ATIVO)
+// MONITOR DE SESSÃO COM BOTÃO DE COMPRA INTELIGENTE E FILTRADO
 // ==========================================================================
 auth.onAuthStateChanged(user => {
     if (user) {
@@ -98,26 +96,41 @@ auth.onAuthStateChanged(user => {
             inicializarPainelAdmin();
             ouvirCardsGlobaisAdmin();
         } else {
-            database.ref('usuarios/' + user.uid).on('value', snapshot => {
+            database.ref('usuarios/' + user.uid).on('value', async snapshot => {
                 const dados = snapshot.val();
                 if (dados) {
                     dadosClienteAtual = dados;
                     document.getElementById('user-display-name').innerText = `${dados.nome} ${dados.sobrenome}`;
                     
-                    // O container de alertas fica permanentemente visível para compras recorrentes
+                    // Avalia se há cards novos que o usuário ainda não possui
+                    const temCardDisponivelParaComprar = await verificarSeTemCardNaoAdquirido(dados.jogos_liberados || {});
                     const areaPendente = document.getElementById('area-compra-pendente');
-                    areaPendente.style.display = "block"; 
-                    
-                    // Ajuste de títulos e mensagens dinâmicas conforme o status da esteira contínua
-                    if (dados.status_cadastro === "pago") {
-                        areaPendente.querySelector('h3').innerText = "Adquira as Novas Versões!";
-                        areaPendente.querySelector('p').innerText = "Deseja garantir o novo Patch lançado? Envie o comprovante abaixo!";
-                    } else if (dados.status_cadastro === "comprovante_enviado") {
-                        areaPendente.querySelector('h3').innerText = "⏳ Comprovante em Análise";
-                        areaPendente.querySelector('p').innerText = "Seu comprovante foi enviado ao Admin. Aguarde a liberação do seu novo Card!";
+                    const btnAbrirForm = document.getElementById('btn-abrir-formulario');
+
+                    if (!temCardDisponivelParaComprar) {
+                        // Se não há cards no sistema ou ele já comprou TODOS, esconde a central de compras
+                        areaPendente.style.display = "none";
                     } else {
-                        areaPendente.querySelector('h3').innerText = "Você ainda não possui jogos ativos!";
-                        areaPendente.querySelector('p').innerText = "Envie o seu comprovante para liberar o seu acesso instantâneo ao Hub.";
+                        // Se há cards novos no horizonte, exibe o painel de compras customizado
+                        areaPendente.style.display = "block";
+                        
+                        if (dados.status_cadastro === "comprovante_enviado") {
+                            document.getElementById('texto-alerta-titulo').innerText = "⏳ Comprovante em Análise";
+                            document.getElementById('texto-alerta-desc').innerText = "Seu comprovante foi enviado com sucesso. Aguarde a validação do administrador.";
+                            btnAbrirForm.style.display = "none"; // Oculta o botão temporariamente durante a análise
+                        } else if (dados.status_cadastro === "pago") {
+                            document.getElementById('texto-alerta-titulo').innerText = "Novas Versões Disponíveis!";
+                            document.getElementById('texto-alerta-desc').innerText = "Deseja garantir os novos patches lançados? Clique abaixo!";
+                            btnAbrirForm.innerText = "Realizar nova compra";
+                            btnAbrirForm.className = "btn-gamer btn-nova-compra"; // Aplica estilo ouro/laranja
+                            btnAbrirForm.style.display = "inline-block";
+                        } else {
+                            document.getElementById('texto-alerta-titulo').innerText = "Você ainda não possui jogos ativos!";
+                            document.getElementById('texto-alerta-desc').innerText = "Envie o seu comprovante para liberar o seu acesso instantâneo ao Hub.";
+                            btnAbrirForm.innerText = "Adquira já o seu jogo";
+                            btnAbrirForm.className = "btn-gamer"; // Botão verde clássico
+                            btnAbrirForm.style.display = "inline-block";
+                        }
                     }
                     
                     irParaTela(viewCliente);
@@ -131,9 +144,28 @@ auth.onAuthStateChanged(user => {
     }
 });
 
+// Compara a lista global com a lista do usuário
+function verificarSeTemCardNaoAdquirido(jogosLiberadosUsuario) {
+    return new Promise((resolve) => {
+        database.ref('cards_disponiveis').once('value', snapshot => {
+            const cardsGlobais = snapshot.val();
+            if (!cardsGlobais) {
+                resolve(false); // Sem cards cadastrados no sistema
+                return;
+            }
+            const idsGlobais = Object.keys(cardsGlobais);
+            // Verifica se existe alguma ID no sistema global que não está nas chaves do usuário
+            const temNovidade = idsGlobais.some(id => !jogosLiberadosUsuario[id]);
+            resolve(temNovidade);
+        });
+    });
+}
+
 function deslogar() { auth.signOut().then(() => location.reload()); }
 
-// Registro e Login
+// ==========================================================================
+// AUTENTICAÇÃO: CADASTRO, LOGIN ("LOGANDO...") E RECUPERAÇÃO DE SENHA
+// ==========================================================================
 document.getElementById('form-cadastro-auth').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nome = document.getElementById('cad-nome').value.trim();
@@ -155,14 +187,46 @@ document.getElementById('form-cadastro-auth').addEventListener('submit', async (
     } catch (error) { alert("Erro ao cadastrar: " + error.message); }
 });
 
+// Login com Feedback Visual "Logando..."
 document.getElementById('form-login').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim();
     const senha = document.getElementById('login-senha').value;
-    try { await auth.signInWithEmailAndPassword(email, senha); } catch (error) { alert("Dados incorretos: " + error.message); }
+    const btnLogar = document.getElementById('btn-logar');
+    
+    // Altera o estado do botão
+    btnLogar.innerText = "LOGANDO... AGUARDE";
+    btnLogar.disabled = true;
+
+    try { 
+        await auth.signInWithEmailAndPassword(email, senha); 
+    } catch (error) { 
+        alert("Dados incorretos: " + error.message); 
+        btnLogar.innerText = "LOGAR NO HUB";
+        btnLogar.disabled = false;
+    }
 });
 
-// Envio de Mídia do Comprovante (Com Otimizador Integrado)
+// NOVO: Ação do Botão Esqueci minha Senha
+document.getElementById('btn-esqueci-senha').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) {
+        alert("⚠️ Por favor, digite o seu e-mail no campo acima antes de clicar em recuperar senha!");
+        return;
+    }
+    if (!validarProvedorEmail(email)) {
+        alert("⚠️ E-mail inválido ou mal estruturado.");
+        return;
+    }
+    try {
+        await auth.sendPasswordResetEmail(email);
+        alert(`🚀 Link de redefinição enviado com sucesso para: ${email}\n\nVerifique a sua caixa de entrada ou spam!`);
+    } catch (error) {
+        alert("Erro ao enviar e-mail de recuperação: " + error.message);
+    }
+});
+
+// Envio de Comprovante
 document.getElementById('btn-abrir-formulario').addEventListener('click', () => modalFormEnvio.classList.add('active'));
 document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.classList.remove('active'));
 
@@ -194,10 +258,8 @@ document.getElementById('form-comprovante').addEventListener('submit', async (e)
 
     try {
         const base64Str = await converterBase64(arquivo);
-        // Garante margem segura de caracteres
         let base64Final = arquivo.type === "application/pdf" ? base64Str : base64Str.slice(0, 49000);
 
-        // Injeta no banco e reseta o status para reanalisar no Admin (Fluxo contínuo)
         await database.ref(`usuarios/${usuarioLogadoUid}/comprovante_base64`).set(base64Final);
         await database.ref(`usuarios/${usuarioLogadoUid}/status_cadastro`).set("comprovante_enviado");
         
@@ -207,7 +269,7 @@ document.getElementById('form-comprovante').addEventListener('submit', async (e)
     finally { btn.innerText = "CONCLUIR INSCRIÇÃO"; btn.disabled = false; }
 });
 
-// Renderização dos Cards no Cliente
+// Renderização Cliente
 function ouvirCardsDoCliente(uid) {
     database.ref(`usuarios/${uid}/jogos_liberados`).on('value', snapshot => {
         gridCardsCliente.innerHTML = "";
@@ -233,7 +295,6 @@ function abrirModalJogo(card) {
     document.getElementById('modal-jogo-titulo').innerText = card.titulo;
     document.getElementById('modal-jogo-descricao').innerText = card.descricao;
     
-    // CAMADA ANTI-PIRATARIA 2: Impede arrastar imagem/capa
     imgCapa.addEventListener('dragstart', (e) => e.preventDefault());
 
     const container = document.getElementById('modal-jogo-botoes');
@@ -250,7 +311,6 @@ function abrirModalJogo(card) {
 }
 function fecharModalJogo() { modalDetalhesJogo.classList.remove('active'); }
 
-// CAMADA ANTI-PIRATARIA 1 & 3: Trava botão direito e atalhos F12/Ctrl+U
 modalDetalhesJogo.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
 window.addEventListener('keydown', (e) => {
     if (modalDetalhesJogo.classList.contains('active')) {
@@ -261,7 +321,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================================================
-// CONTROLE DE CARDS DE JOGOS (ADMIN) - CRIAR, EDITAR, DELETAR, EXPORTAR
+// CONTROLE DE CARDS DE JOGOS (ADMIN)
 // ==========================================================================
 document.getElementById('form-criar-card').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -284,7 +344,7 @@ document.getElementById('form-criar-card').addEventListener('submit', async (e) 
     try {
         if (idEdicao) {
             await database.ref(`cards_disponiveis/${idEdicao}`).set(dadosCard);
-            alert("🔄 Card atualizado com sucesso em tempo real em todo o sistema!");
+            alert("🔄 Card atualizado com sucesso em tempo real!");
             cancelarEdicaoCard();
         } else {
             await database.ref('cards_disponiveis').push(dadosCard);
@@ -376,7 +436,7 @@ document.getElementById('btn-exportar-cards').addEventListener('click', () => {
 });
 
 // ==========================================================================
-// PAINEL ADMINISTRATIVO: SEPARAÇÃO QUALIFICADA EM ABAS E CONTROLE INTEGRAL
+// PAINEL ADMINISTRATIVO: SEPARAÇÃO QUALIFICADA EM ABAS E GESTÃO
 // ==========================================================================
 function inicializarPainelAdmin() {
     database.ref('usuarios').on('value', snapshot => {
@@ -393,8 +453,6 @@ function inicializarPainelAdmin() {
             if (users[uid].email === "admin@admin.com") return;
 
             const isPago = users[uid].status_cadastro === "pago";
-            
-            // Separação cirúrgica de abas dinâmicas
             if (filtroAdminAtual === "pendentes" && isPago) return;
             if (filtroAdminAtual === "concluidos" && !isPago) return;
 
@@ -402,7 +460,6 @@ function inicializarPainelAdmin() {
             const userBox = document.createElement('div');
             userBox.className = 'user-item';
 
-            // ABA 1: PENDENTES / ENVIADOS
             if (filtroAdminAtual === "pendentes") {
                 const temComp = users[uid].comprovante_base64 && users[uid].comprovante_base64.length > 10;
                 const btnComp = temComp 
@@ -422,9 +479,7 @@ function inicializarPainelAdmin() {
                     </select>
                     <button class="btn-inject" onclick="injetarCardParaUsuario('${uid}')">Confirmar Pagamento & Liberar Hub</button>
                 `;
-            } 
-            // ABA 2: ACESSOS JÁ LIBERADOS
-            else {
+            } else {
                 let listaJogosAtivosHtml = "";
                 const jogos = users[uid].jogos_liberados || {};
                 const keysJogos = Object.keys(jogos);
@@ -502,10 +557,8 @@ function alimentarSelectComCards(selectElement, jogosJaLiberados = {}) {
 async function injetarCardParaUsuario(uid) {
     const selectedCardId = document.getElementById(`select-game-${uid}`).value;
     try {
-        // Modifica o status para pago
         await database.ref(`usuarios/${uid}/status_cadastro`).set("pago");
         if (selectedCardId) {
-            // Adiciona o novo card de forma cumulativa sem sobrescrever os anteriores
             await database.ref(`usuarios/${uid}/jogos_liberados/${selectedCardId}`).set(true);
             alert("🔥 Sucesso! Card injetado de forma contínua!");
         } else {
