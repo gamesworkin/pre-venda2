@@ -60,7 +60,7 @@ document.getElementById('tab-cadastro').addEventListener('click', () => {
 });
 
 // ==========================================================================
-// MONITOR DE SESSÃO (MÁGICA DO LOGIN EM TEMPO REAL)
+// MONITOR DE SESSÃO (CORRIGIDO ANTI-TRAVAMENTO)
 // ==========================================================================
 auth.onAuthStateChanged(user => {
     if (user) {
@@ -69,8 +69,11 @@ auth.onAuthStateChanged(user => {
             irParaTela(viewAdmin);
             inicializarPainelAdmin();
         } else {
+            // Monitora os dados cadastrais do cliente em tempo real
             database.ref('usuarios/' + user.uid).on('value', snapshot => {
                 const dados = snapshot.val();
+                
+                // AJUSTE SEGURO: Se o usuário logou mas não tem dados no banco ainda
                 if (dados) {
                     dadosClienteAtual = dados;
                     document.getElementById('user-display-name').innerText = `${dados.nome} ${dados.sobrenome}`;
@@ -84,6 +87,11 @@ auth.onAuthStateChanged(user => {
                     
                     irParaTela(viewCliente);
                     ouvirCardsDoCliente(user.uid);
+                } else {
+                    // Caso o registro no banco não exista, desloga por segurança ou limpa a tela
+                    document.getElementById('user-display-name').innerText = "Jogador Novo";
+                    document.getElementById('area-compra-pendente').style.display = "block";
+                    irParaTela(viewCliente);
                 }
             });
         }
@@ -92,6 +100,7 @@ auth.onAuthStateChanged(user => {
         irParaTela(viewAuth);
     }
 });
+
 
 function deslogar() {
     auth.signOut().then(() => location.reload());
