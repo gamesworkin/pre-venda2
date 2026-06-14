@@ -10,16 +10,26 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        /* Base da tela preparada para o Canvas de partículas */
-        .senha-bg-container {
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #05070a;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Espaço de exibição interativo e limpo */
+        .premium-viewport {
             position: relative;
-            min-height: 100vh;
+            width: 100vw;
+            height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at center, #111a2e 0%, #05070a 100%);
-            overflow: hidden;
-            padding: 15px;
+            z-index: 2;
         }
 
         #particle-canvas {
@@ -32,113 +42,130 @@
             pointer-events: none;
         }
 
-        /* Caixa de senha flutuante por cima das partículas */
-        .senha-box {
+        /* Container central flutuante livre de caixas pesadas */
+        .content-flow {
             position: relative;
-            z-index: 2;
-            background-color: rgba(18, 24, 36, 0.85); /* Sutilmente transparente para ver o brilho atrás */
-            backdrop-filter: blur(8px);
-            border: 2px solid #242f41;
-            width: 100%;
-            max-width: 500px;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            z-index: 3;
             text-align: center;
-            transition: border-color 0.5s ease, box-shadow 0.5s ease;
-        }
-
-        /* Quando a senha é revelada, a caixa ganha brilho verde neon */
-        .senha-box.revelada {
-            border-color: #00ff66;
-            box-shadow: 0 0 30px rgba(0, 255, 102, 0.25);
-        }
-
-        /* Container de exibição da senha */
-        .display-senha-container {
-            margin: 25px 0;
-            min-height: 70px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
         }
 
-        .senha-secreta {
-            font-size: 2rem;
-            font-weight: 900;
+        .header-subtitle {
+            color: #556673;
+            font-size: 0.75rem;
+            text-transform: uppercase;
             letter-spacing: 3px;
-            color: #00ff66;
-            text-shadow: 0 0 15px rgba(0, 255, 102, 0.8);
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 30px;
+            font-weight: 600;
+            animation: fadeInSlow 1.5s ease;
         }
 
-        .senha-secreta.show {
+        /* Animação e estilo da Senha se Materializando */
+        .senha-stream {
+            font-size: 2.4rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(0, 255, 102, 0.6), 0 0 40px rgba(0, 255, 102, 0.2);
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 2s cubic-bezier(0.075, 0.82, 0.165, 1);
+            margin: 20px 0;
+            user-select: none;
+        }
+
+        .senha-stream.revelada {
             opacity: 1;
             transform: scale(1);
+            color: #00ff66;
         }
 
-        /* Botão Ouro/Laranja para Copiar */
-        .btn-copiar {
-            background: linear-gradient(135deg, #ffaa00 0%, #e67700 100%);
-            color: #ffffff;
-            border: none;
-            padding: 10px 20px;
-            font-weight: bold;
-            font-size: 0.85rem;
+        /* Botões Concisos, Delicados e Premium */
+        .btn-premium-trigger {
+            background: transparent;
+            color: #00ff66;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            padding: 10px 24px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            border-radius: 4px;
+            border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 153, 0, 0.2);
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.05);
+        }
+
+        .btn-premium-trigger:hover:not(:disabled) {
+            border-color: #00ff66;
+            background: rgba(0, 255, 102, 0.05);
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.2);
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+        }
+
+        .btn-premium-trigger:disabled {
+            color: #445566;
+            border-color: rgba(68, 85, 102, 0.2);
+            cursor: default;
+        }
+
+        .btn-premium-copy {
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 18px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-radius: 50px;
+            cursor: pointer;
             opacity: 0;
+            transform: translateY(10px);
             pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .btn-copiar.show {
-            opacity: 1;
+        .btn-premium-copy.show {
+            opacity: 0.7;
+            transform: translateY(0);
             pointer-events: auto;
-            animation: fadeIn 0.4s ease forwards;
         }
 
-        .btn-copiar:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 15px rgba(255, 153, 0, 0.4);
+        .btn-premium-copy.show:hover {
+            opacity: 1;
+            border-color: #ffaa00;
+            color: #ffaa00;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.15);
+        }
+
+        @keyframes fadeInSlow {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <div class="senha-bg-container">
-        
+    <div class="premium-viewport">
         <canvas id="particle-canvas"></canvas>
 
-        <div id="box-senha-main" class="senha-box">
+        <div class="content-flow">
+            <div class="header-subtitle">Chave de Segurança Originária</div>
             
-            <h2 style="color: #00ff66; letter-spacing: 1px; margin-bottom: 10px;">🔒 SEGURANÇA ORIGINAL</h2>
-            <p style="color: #8899a6; font-size: 0.9rem; margin-bottom: 20px;">Utilize a chave abaixo para extrair os arquivos do seu Patch</p>
+            <button id="btn-revelar-premium" class="btn-premium-trigger">Revelar Senha do Patch</button>
             
-            <div class="tabs" style="justify-content: center; margin-bottom: 20px;">
-                <span class="tab-btn active" style="cursor: default; padding-bottom: 5px;">DESCOMPACTADOR</span>
-            </div>
+            <div id="senha-alvo" class="senha-stream">BOMBA_PATCH_2026</div>
 
-            <div class="display-senha-container">
-                <button id="btn-revelar-magia" class="btn-gamer" style="max-width: 280px;">REVELAR SENHA DO PATCH</button>
-                
-                <div id="texto-senha" class="senha-secreta" style="display: none;">BOMBA_PATCH_2026</div>
+            <div style="margin-top: 25px; min-height: 35px;">
+                <button id="btn-copiar-premium" class="btn-premium-copy">📋 Copiar Chave</button>
             </div>
-
-            <div style="min-height: 40px; margin-top: 10px;">
-                <button id="btn-copiar-chave" class="btn-copiar">📋 COPIAR CHAVE</button>
-            </div>
-
-            <p style="color: #556673; font-size: 0.8rem; margin-top: 25px; border-top: 1px solid #161c26; padding-top: 15px;">
-                ⚠️ Não compartilhe esta senha. Ela é de uso exclusivo dos compradores do StreamHub.
-            </p>
         </div>
     </div>
 
@@ -147,143 +174,140 @@
         const ctx = canvas.getContext("2d");
         
         let particlesArray = [];
-        let rastroAtivo = false;
-        let quantidadeParticulas = 80;
+        let estadoEfeito = "normal"; // normal, atrair, orbitar
+        let maxParticulas = 60;
 
-        // Ajusta tamanho do canvas em tempo real
-        function ajustarCanvas() {
+        function redimensionar() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
-        window.addEventListener("resize", ajustarCanvas);
-        ajustarCanvas();
+        window.addEventListener("resize", redimensionar);
+        redimensionar();
 
-        // Classe Construtora de cada partícula de brilho
-        class Particula {
+        class ParticulaPremium {
             constructor() {
                 this.reset();
             }
 
             reset() {
                 this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height + canvas.height; // Começam abaixo da tela
-                this.size = Math.random() * 2 + 1;
-                this.speedX = Math.random() * 1.5 - 0.75;
-                this.speedY = -(Math.random() * 1.5 + 0.5);
-                // Matiz flutuando entre o Verde Neon (#00ff66) e o Ciano Gamer
-                this.color = `rgba(${Math.floor(Math.random() * 50)}, 255, ${Math.floor(Math.random() * 120 + 100)}, ${Math.random() * 0.6 + 0.2})`;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.speedY = -(Math.random() * 0.5 + 0.1);
+                this.alpha = Math.random() * 0.5 + 0.2;
+                this.angle = Math.random() * Math.PI * 2;
+                this.spinSpeed = Math.random() * 0.02 - 0.01;
+                this.radiusDistance = Math.random() * 120 + 40;
             }
 
             update() {
-                if (rastroAtivo) {
-                    // Efeito de sucção: Atrai as partículas aceleradas para o centro da caixa
-                    const centroX = canvas.width / 2;
-                    const centroY = canvas.height / 2;
-                    this.speedX += (centroX - this.x) * 0.001;
-                    this.speedY += (centroY - this.y) * 0.001;
-                    this.size = Math.random() * 3 + 1.5;
-                }
-                this.x += this.speedX;
-                this.y += this.speedY;
+                const centroX = canvas.width / 2;
+                const centroY = canvas.height / 2;
 
-                // Se sair da tela, reseta
-                if (this.y < 0 || this.x < 0 || this.x > canvas.width) {
-                    this.reset();
+                if (estadoEfeito === "normal") {
+                    // Fluxo calmo de poeira cósmica subindo lentamente
+                    this.y += this.speedY;
+                    this.x += this.speedX;
+                    if (this.y < 0) {
+                        this.y = canvas.height;
+                        this.x = Math.random() * canvas.width;
+                    }
+                } 
+                else if (estadoEfeito === "atrair") {
+                    // Puxa as partículas em velocidade para o centro exato da senha
+                    this.x += (centroX - this.x) * 0.06;
+                    this.y += (centroY - this.y) * 0.06;
+                    this.size = Math.random() * 2.5 + 1;
+                    this.alpha = 0.9;
+                } 
+                else if (estadoEfeito === "orbitar") {
+                    // Partículas orbitam e brilham ao redor da senha formada
+                    this.angle += this.spinSpeed * 2;
+                    this.x += ((centroX + Math.cos(this.angle) * this.radiusDistance) - this.x) * 0.05;
+                    this.y += ((centroY + Math.sin(this.angle) * this.radiusDistance * 0.4) - this.y) * 0.05;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.alpha = Math.random() * 0.4 + 0.4;
                 }
             }
 
             draw() {
-                ctx.fillStyle = this.color;
+                ctx.fillStyle = `rgba(0, 255, 102, ${this.alpha})`;
+                ctx.shadowBlur = estadoEfeito !== "normal" ? 12 : 0;
+                ctx.shadowColor = "#00ff66";
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
-                
-                // Brilho extra em volta da partícula (Glow Effect)
-                if (rastroAtivo) {
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = "#00ff66";
-                } else {
-                    ctx.shadowBlur = 0;
-                }
             }
         }
 
-        // Inicializa o array de ambiente
-        function inicializarParticulas() {
+        function init() {
             particlesArray = [];
-            for (let i = 0; i < quantidadeParticulas; i++) {
-                particlesArray.push(new Particula());
+            for (let i = 0; i < maxParticulas; i++) {
+                particlesArray.push(new ParticulaPremium());
             }
         }
-        inicializarParticulas();
+        init();
 
-        // Loop de animação contínua (60 FPS)
-        function animar() {
+        function rodarLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Reseta sombra padrão de desenho
-            ctx.shadowBlur = 0; 
-            
+            ctx.shadowBlur = 0;
             for (let i = 0; i < particlesArray.length; i++) {
                 particlesArray[i].update();
                 particlesArray[i].draw();
             }
-            requestAnimationFrame(animar);
+            requestAnimationFrame(rodarLoop);
         }
-        animar();
+        rodarLoop();
 
         // ==========================================================================
-        // GATILHO DA REVELAÇÃO DA SENHA (MÁGICA ONCLICK)
+        // GATILHO DA REVELAÇÃO MAGNÉTICA
         // ==========================================================================
-        const btnRevelar = document.getElementById("btn-revelar-magia");
-        const textoSenha = document.getElementById("texto-senha");
-        const btnCopiar = document.getElementById("btn-copiar-chave");
-        const boxMain = document.getElementById("box-senha-main");
+        const btnRevelar = document.getElementById("btn-revelar-premium");
+        const senhaAlvo = document.getElementById("senha-alvo");
+        const btnCopiar = document.getElementById("btn-copiar-premium");
 
         btnRevelar.addEventListener("click", () => {
-            // Liga a aceleração intensa e atração das partículas de brilho
-            rastroAtivo = true;
-            quantidadeParticulas = 200; // Multiplica os brilhos na explosão
-            inicializarParticulas();
-
-            btnRevelar.innerText = "COLETANDO BRILHOS...";
             btnRevelar.disabled = true;
+            btnRevelar.style.opacity = "0";
+            
+            // Inicia compressão magnética de partículas
+            estadoEfeito = "atrair";
+            maxParticulas = 180; // Eleva a densidade para formar a senha
+            init();
 
-            // Timer para simular a fusão das partículas no centro e revelar a senha
+            // Transição em etapas para a formação visual
             setTimeout(() => {
                 btnRevelar.style.display = "none";
-                textoSenha.style.display = "block";
+                senhaAlvo.classList.add("revelada");
                 
-                // Força o gatilho da transição CSS (Efeito Scale + Opacidade)
+                // Transiciona para órbita suave em volta da palavra formada
+                estadoEfeito = "orbitar";
+                
                 setTimeout(() => {
-                    textoSenha.classList.add("show");
                     btnCopiar.classList.add("show");
-                    boxMain.classList.add("revelada");
-                    rastroAtivo = false; // Normaliza o vento das partículas de fundo
-                    quantidadeParticulas = 60;
-                }, 50);
+                }, 600);
 
-            }, 1800); // 1.8 segundos de efeito de poeira estelar correndo pela tela
+            }, 1500); // 1.5 segundos de pura convergência de brilhos
         });
 
-        // Evento de clique único para copiar a chave para a área de transferência
+        // Copiar Premium Clip
         btnCopiar.addEventListener("click", () => {
-            const senhaParaCopiar = textoSenha.innerText;
-            navigator.clipboard.writeText(senhaParaCopiar).then(() => {
-                const textoOriginal = btnCopiar.innerText;
-                btnCopiar.innerText = "✅ COPIADA COM SUCESSO!";
-                btnCopiar.style.background = "#00bc44";
+            navigator.clipboard.writeText(senhaAlvo.innerText).then(() => {
+                const textOrig = btnCopiar.innerText;
+                btnCopiar.innerText = "✅ Copiada";
+                btnCopiar.style.borderColor = "#00ff66";
+                btnCopiar.style.color = #00ff66;
                 
-                // Volta ao texto original após 2 segundos
                 setTimeout(() => {
-                    btnCopiar.innerText = textoOriginal;
-                    btnCopiar.style.background = "linear-gradient(135deg, #ffaa00 0%, #e67700 100%)";
+                    btnCopiar.innerText = textOrig;
+                    btnCopiar.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                    btnCopiar.style.color = "#ffffff";
                 }, 2000);
-            }).catch(err => {
-                alert("Erro ao copiar automaticamente: Selecione o texto e copie manualmente.");
             });
         });
 
-        // Trava de Menu de Contexto nesta página também por segurança extra
+        // Proteções cirúrgicas de botão direito
         document.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
     </script>
 </body>
