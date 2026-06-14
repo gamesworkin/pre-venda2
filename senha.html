@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamHub - Chave de Descompactação</title>
+    
+    <link rel="icon" type="image/x-icon" href="fav.ico">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Base da tela preparada para o Canvas de partículas */
+        .senha-bg-container {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #111a2e 0%, #05070a 100%);
+            overflow: hidden;
+            padding: 15px;
+        }
+
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Caixa de senha flutuante por cima das partículas */
+        .senha-box {
+            position: relative;
+            z-index: 2;
+            background-color: rgba(18, 24, 36, 0.85); /* Sutilmente transparente para ver o brilho atrás */
+            backdrop-filter: blur(8px);
+            border: 2px solid #242f41;
+            width: 100%;
+            max-width: 500px;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            transition: border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        /* Quando a senha é revelada, a caixa ganha brilho verde neon */
+        .senha-box.revelada {
+            border-color: #00ff66;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.25);
+        }
+
+        /* Container de exibição da senha */
+        .display-senha-container {
+            margin: 25px 0;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .senha-secreta {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #00ff66;
+            text-shadow: 0 0 15px rgba(0, 255, 102, 0.8);
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .senha-secreta.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Botão Ouro/Laranja para Copiar */
+        .btn-copiar {
+            background: linear-gradient(135deg, #ffaa00 0%, #e67700 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 153, 0, 0.2);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .btn-copiar.show {
+            opacity: 1;
+            pointer-events: auto;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .btn-copiar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(255, 153, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="senha-bg-container">
+        
+        <canvas id="particle-canvas"></canvas>
+
+        <div id="box-senha-main" class="senha-box">
+            
+            <h2 style="color: #00ff66; letter-spacing: 1px; margin-bottom: 10px;">🔒 SEGURANÇA ORIGINAL</h2>
+            <p style="color: #8899a6; font-size: 0.9rem; margin-bottom: 20px;">Utilize a chave abaixo para extrair os arquivos do seu Patch</p>
+            
+            <div class="tabs" style="justify-content: center; margin-bottom: 20px;">
+                <span class="tab-btn active" style="cursor: default; padding-bottom: 5px;">DESCOMPACTADOR</span>
+            </div>
+
+            <div class="display-senha-container">
+                <button id="btn-revelar-magia" class="btn-gamer" style="max-width: 280px;">REVELAR SENHA DO PATCH</button>
+                
+                <div id="texto-senha" class="senha-secreta" style="display: none;">BOMBA_PATCH_2026</div>
+            </div>
+
+            <div style="min-height: 40px; margin-top: 10px;">
+                <button id="btn-copiar-chave" class="btn-copiar">📋 COPIAR CHAVE</button>
+            </div>
+
+            <p style="color: #556673; font-size: 0.8rem; margin-top: 25px; border-top: 1px solid #161c26; padding-top: 15px;">
+                ⚠️ Não compartilhe esta senha. Ela é de uso exclusivo dos compradores do StreamHub.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("particle-canvas");
+        const ctx = canvas.getContext("2d");
+        
+        let particlesArray = [];
+        let rastroAtivo = false;
+        let quantidadeParticulas = 80;
+
+        // Ajusta tamanho do canvas em tempo real
+        function ajustarCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", ajustarCanvas);
+        ajustarCanvas();
+
+        // Classe Construtora de cada partícula de brilho
+        class Particula {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height + canvas.height; // Começam abaixo da tela
+                this.size = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 1.5 - 0.75;
+                this.speedY = -(Math.random() * 1.5 + 0.5);
+                // Matiz flutuando entre o Verde Neon (#00ff66) e o Ciano Gamer
+                this.color = `rgba(${Math.floor(Math.random() * 50)}, 255, ${Math.floor(Math.random() * 120 + 100)}, ${Math.random() * 0.6 + 0.2})`;
+            }
+
+            update() {
+                if (rastroAtivo) {
+                    // Efeito de sucção: Atrai as partículas aceleradas para o centro da caixa
+                    const centroX = canvas.width / 2;
+                    const centroY = canvas.height / 2;
+                    this.speedX += (centroX - this.x) * 0.001;
+                    this.speedY += (centroY - this.y) * 0.001;
+                    this.size = Math.random() * 3 + 1.5;
+                }
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Se sair da tela, reseta
+                if (this.y < 0 || this.x < 0 || this.x > canvas.width) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Brilho extra em volta da partícula (Glow Effect)
+                if (rastroAtivo) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "#00ff66";
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        // Inicializa o array de ambiente
+        function inicializarParticulas() {
+            particlesArray = [];
+            for (let i = 0; i < quantidadeParticulas; i++) {
+                particlesArray.push(new Particula());
+            }
+        }
+        inicializarParticulas();
+
+        // Loop de animação contínua (60 FPS)
+        function animar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Reseta sombra padrão de desenho
+            ctx.shadowBlur = 0; 
+            
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            requestAnimationFrame(animar);
+        }
+        animar();
+
+        // ==========================================================================
+        // GATILHO DA REVELAÇÃO DA SENHA (MÁGICA ONCLICK)
+        // ==========================================================================
+        const btnRevelar = document.getElementById("btn-revelar-magia");
+        const textoSenha = document.getElementById("texto-senha");
+        const btnCopiar = document.getElementById("btn-copiar-chave");
+        const boxMain = document.getElementById("box-senha-main");
+
+        btnRevelar.addEventListener("click", () => {
+            // Liga a aceleração intensa e atração das partículas de brilho
+            rastroAtivo = true;
+            quantidadeParticulas = 200; // Multiplica os brilhos na explosão
+            inicializarParticulas();
+
+            btnRevelar.innerText = "COLETANDO BRILHOS...";
+            btnRevelar.disabled = true;
+
+            // Timer para simular a fusão das partículas no centro e revelar a senha
+            setTimeout(() => {
+                btnRevelar.style.display = "none";
+                textoSenha.style.display = "block";
+                
+                // Força o gatilho da transição CSS (Efeito Scale + Opacidade)
+                setTimeout(() => {
+                    textoSenha.classList.add("show");
+                    btnCopiar.classList.add("show");
+                    boxMain.classList.add("revelada");
+                    rastroAtivo = false; // Normaliza o vento das partículas de fundo
+                    quantidadeParticulas = 60;
+                }, 50);
+
+            }, 1800); // 1.8 segundos de efeito de poeira estelar correndo pela tela
+        });
+
+        // Evento de clique único para copiar a chave para a área de transferência
+        btnCopiar.addEventListener("click", () => {
+            const senhaParaCopiar = textoSenha.innerText;
+            navigator.clipboard.writeText(senhaParaCopiar).then(() => {
+                const textoOriginal = btnCopiar.innerText;
+                btnCopiar.innerText = "✅ COPIADA COM SUCESSO!";
+                btnCopiar.style.background = "#00bc44";
+                
+                // Volta ao texto original após 2 segundos
+                setTimeout(() => {
+                    btnCopiar.innerText = textoOriginal;
+                    btnCopiar.style.background = "linear-gradient(135deg, #ffaa00 0%, #e67700 100%)";
+                }, 2000);
+            }).catch(err => {
+                alert("Erro ao copiar automaticamente: Selecione o texto e copie manualmente.");
+            });
+        });
+
+        // Trava de Menu de Contexto nesta página também por segurança extra
+        document.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
+    </script>
+</body>
+</html>
