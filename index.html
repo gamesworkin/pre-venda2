@@ -48,8 +48,8 @@
 
         <div class="container">
             <div id="area-compra-pendente" class="box-alerta">
-                <h3>Você ainda não possui jogos ativos!</h3>
-                <p>Envie o seu comprovante para liberar o seu acesso instantâneo ao Hub.</p>
+                <h3>Garante as novas atualizações!</h3>
+                <p>Envie o seu novo comprovante para liberar mais jogos no seu painel.</p>
                 <button id="btn-abrir-formulario" class="btn-gamer">Adquira já o seu jogo</button>
             </div>
 
@@ -90,11 +90,13 @@
 
         <div class="container admin-grid">
             <section class="admin-box">
-                <h3>1. Criar Novo Card de Jogo (JSON)</h3>
+                <h3 id="titulo-form-card">1. Criar Novo Card de Jogo</h3>
                 <form id="form-criar-card">
+                    <input type="hidden" id="card-id-edicao" value="">
+                    
                     <input type="text" id="card-titulo" placeholder="Título do Jogo" required>
                     <input type="url" id="card-capa" placeholder="URL da Imagem da Capa" required>
-                    <textarea id="card-descricao" placeholder="Descrição/Informações do Jogo" rows="4" required></textarea>
+                    <textarea id="card-descricao" placeholder="Descrição/Informações do Jogo" rows="3" required></textarea>
                     
                     <h4>Configurar Botões de Download (Até 4)</h4>
                     <div class="link-group">
@@ -113,12 +115,30 @@
                         <input type="text" id="btn-txt-4" placeholder="Texto Botão 4">
                         <input type="url" id="btn-url-4" placeholder="URL Download 4">
                     </div>
-                    <button type="submit" class="btn-gamer">SALVAR CARD NO SISTEMA</button>
+                    <div style="display:flex; gap:10px;">
+                        <button type="submit" id="btn-salvar-card" class="btn-gamer">SALVAR CARD</button>
+                        <button type="button" id="btn-cancelar-edicao" class="btn-sair" style="display:none; margin-top:0; height:45px;">Cancelar</button>
+                    </div>
                 </form>
+
+                <div style="margin-top: 30px; border-top: 2px solid #1f2a3c; padding-top: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3>Cards Cadastrados</h3>
+                        <button id="btn-exportar-cards" class="btn-visualizar-comprovante" style="width:auto; margin:0; padding:6px 12px;">📥 Exportar (JSON)</button>
+                    </div>
+                    <div id="lista-cards-criados" class="lista-usuarios">
+                        </div>
+                </div>
             </section>
 
             <section class="admin-box">
-                <h3>2. Usuários Registrados (Injetar Cards)</h3>
+                <h3>2. Controle de Usuários e Pedidos</h3>
+                
+                <div class="tabs" style="margin-bottom:15px; background: #0b0e14; padding: 5px; border-radius:6px;">
+                    <button id="tab-solic-pendentes" class="tab-btn active" style="font-size:0.85rem; padding:8px;">Pendentes / Enviados</button>
+                    <button id="tab-solic-concluidos" class="tab-btn" style="font-size:0.85rem; padding:8px;">Acessos Liberados</button>
+                </div>
+                
                 <div id="lista-usuarios-admin" class="lista-usuarios">
                     </div>
             </section>
