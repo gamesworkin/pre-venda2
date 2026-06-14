@@ -263,7 +263,9 @@ document.getElementById('form-comprovante').addEventListener('submit', async (e)
     finally { btn.innerText = "CONCLUIR INSCRIÇÃO"; btn.disabled = false; }
 });
 
-// Renderização Cliente
+// ==========================================================================
+// RENDERIZAÇÃO CLIENTE COM TRAVA DE SEGURANÇA NOS CARDS
+// ==========================================================================
 function ouvirCardsDoCliente(uid) {
     database.ref(`usuarios/${uid}/jogos_liberados`).on('value', snapshot => {
         gridCardsCliente.innerHTML = "";
@@ -275,6 +277,13 @@ function ouvirCardsDoCliente(uid) {
                     const cardElement = document.createElement('div');
                     cardElement.className = 'game-card';
                     cardElement.innerHTML = `<img src="${card.capa_url}"><h4>${card.titulo}</h4>`;
+                    
+                    // CORREÇÃO APLICADA AQUI: Bloqueia o botão direito no card antes mesmo dele ser clicado
+                    cardElement.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        return false;
+                    });
+
                     cardElement.addEventListener('click', () => abrirModalJogo(card));
                     gridCardsCliente.appendChild(cardElement);
                 }
@@ -460,7 +469,6 @@ function inicializarPainelAdmin() {
             const userBox = document.createElement('div');
             userBox.className = 'user-item';
 
-            // ABA 1: PENDENTES / ENVIADOS (COM NOVO BOTÃO DE DELETAR REGISTRO ISOLADO)
             if (filtroAdminAtual === "pendentes") {
                 const temComp = users[uid].comprovante_base64 && users[uid].comprovante_base64.length > 10;
                 const btnComp = temComp 
@@ -587,7 +595,6 @@ async function excluirSolicitacaoEComprovante(uid) {
     }
 }
 
-// NOVO: Função para Apagar o Registro de um Usuário Individual direto da aba de Pendentes (Limpa fantasmas do banco)
 async function deletarUsuarioDoBancoTotal(uid, email) {
     const confirmacao = confirm(`🚨 ATENÇÃO - EXCLUSÃO DE REGISTRO:\n\nDeseja deletar DEFINITIVAMENTE a pasta de dados do utilizador [ ${email} ] do banco de dados?\n\nEsta ação vai remover o perfil do seu painel e limpar o registro de testes.\n\nNota: Certifique-se de que ele já foi apagado do menu Auth do Firebase.`);
     
@@ -625,7 +632,7 @@ document.getElementById('btn-reset-geral-temporada').addEventListener('click', a
                         }
                     });
                     await database.ref().update(atualizacoesEmLote);
-                    alert("🧹 Hub atualizado com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
+                    alert("🧹 Hub updated com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
                 } else {
                     alert("Nenhum usuário encontrado para limpar.");
                 }
