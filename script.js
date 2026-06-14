@@ -102,33 +102,30 @@ auth.onAuthStateChanged(user => {
                     dadosClienteAtual = dados;
                     document.getElementById('user-display-name').innerText = `${dados.nome} ${dados.sobrenome}`;
                     
-                    // Avalia se há cards novos que o usuário ainda não possui
                     const temCardDisponivelParaComprar = await verificarSeTemCardNaoAdquirido(dados.jogos_liberados || {});
                     const areaPendente = document.getElementById('area-compra-pendente');
                     const btnAbrirForm = document.getElementById('btn-abrir-formulario');
 
                     if (!temCardDisponivelParaComprar) {
-                        // Se não há cards no sistema ou ele já comprou TODOS, esconde a central de compras
                         areaPendente.style.display = "none";
                     } else {
-                        // Se há cards novos no horizonte, exibe o painel de compras customizado
                         areaPendente.style.display = "block";
                         
                         if (dados.status_cadastro === "comprovante_enviado") {
                             document.getElementById('texto-alerta-titulo').innerText = "⏳ Comprovante em Análise";
                             document.getElementById('texto-alerta-desc').innerText = "Seu comprovante foi enviado com sucesso. Aguarde a validação do administrador.";
-                            btnAbrirForm.style.display = "none"; // Oculta o botão temporariamente durante a análise
+                            btnAbrirForm.style.display = "none";
                         } else if (dados.status_cadastro === "pago") {
                             document.getElementById('texto-alerta-titulo').innerText = "Novas Versões Disponíveis!";
                             document.getElementById('texto-alerta-desc').innerText = "Deseja garantir os novos patches lançados? Clique abaixo!";
                             btnAbrirForm.innerText = "Realizar nova compra";
-                            btnAbrirForm.className = "btn-gamer btn-nova-compra"; // Aplica estilo ouro/laranja
+                            btnAbrirForm.className = "btn-gamer btn-nova-compra";
                             btnAbrirForm.style.display = "inline-block";
                         } else {
                             document.getElementById('texto-alerta-titulo').innerText = "Você ainda não possui jogos ativos!";
                             document.getElementById('texto-alerta-desc').innerText = "Envie o seu comprovante para liberar o seu acesso instantâneo ao Hub.";
                             btnAbrirForm.innerText = "Adquira já o seu jogo";
-                            btnAbrirForm.className = "btn-gamer"; // Botão verde clássico
+                            btnAbrirForm.className = "btn-gamer";
                             btnAbrirForm.style.display = "inline-block";
                         }
                     }
@@ -144,17 +141,15 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-// Compara a lista global com a lista do usuário
 function verificarSeTemCardNaoAdquirido(jogosLiberadosUsuario) {
     return new Promise((resolve) => {
         database.ref('cards_disponiveis').once('value', snapshot => {
             const cardsGlobais = snapshot.val();
             if (!cardsGlobais) {
-                resolve(false); // Sem cards cadastrados no sistema
+                resolve(false);
                 return;
             }
             const idsGlobais = Object.keys(cardsGlobais);
-            // Verifica se existe alguma ID no sistema global que não está nas chaves do usuário
             const temNovidade = idsGlobais.some(id => !jogosLiberadosUsuario[id]);
             resolve(temNovidade);
         });
@@ -187,14 +182,12 @@ document.getElementById('form-cadastro-auth').addEventListener('submit', async (
     } catch (error) { alert("Erro ao cadastrar: " + error.message); }
 });
 
-// Login com Feedback Visual "Logando..."
 document.getElementById('form-login').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim();
     const senha = document.getElementById('login-senha').value;
     const btnLogar = document.getElementById('btn-logar');
     
-    // Altera o estado do botão
     btnLogar.innerText = "LOGANDO... AGUARDE";
     btnLogar.disabled = true;
 
@@ -207,7 +200,6 @@ document.getElementById('form-login').addEventListener('submit', async (e) => {
     }
 });
 
-// NOVO: Ação do Botão Esqueci minha Senha
 document.getElementById('btn-esqueci-senha').addEventListener('click', async () => {
     const email = document.getElementById('login-email').value.trim();
     if (!email) {
@@ -289,6 +281,9 @@ function ouvirCardsDoCliente(uid) {
     });
 }
 
+// ==========================================================================
+// RENDERIZAÇÃO DO MODAL DE DETALHES (PROTEÇÃO CONTRA LINKS NO RODAPÉ APLICADA)
+// ==========================================================================
 function abrirModalJogo(card) {
     const imgCapa = document.getElementById('modal-jogo-capa');
     imgCapa.src = card.capa_url;
@@ -301,10 +296,22 @@ function abrirModalJogo(card) {
     container.innerHTML = "";
     if (card.botoes) {
         card.botoes.forEach(btn => {
-            const a = document.createElement('a');
-            a.className = 'btn-download-dinamico'; a.href = btn.url; a.target = '_blank'; a.innerText = btn.texto;
-            a.addEventListener('dragstart', (e) => e.preventDefault());
-            container.appendChild(a);
+            // CORREÇÃO APLICADA: Criamos uma tag button estilizada que aciona o redirecionamento oculto por clique direto, removendo o href e limpando a visualização do rodapé do navegador.
+            const buttonElement = document.createElement('button');
+            buttonElement.className = 'btn-download-dinamico';
+            buttonElement.innerText = btn.texto;
+            buttonElement.style.width = "100%";
+            buttonElement.style.cursor = "pointer";
+            
+            // Impede arraste do botão
+            buttonElement.addEventListener('dragstart', (e) => e.preventDefault());
+            
+            // Abre o link em nova aba silenciosamente sem deixar rastro visual no hover do mouse
+            buttonElement.addEventListener('click', () => {
+                window.open(btn.url, '_blank');
+            });
+            
+            container.appendChild(buttonElement);
         });
     }
     modalDetalhesJogo.classList.add('active');
@@ -344,7 +351,7 @@ document.getElementById('form-criar-card').addEventListener('submit', async (e) 
     try {
         if (idEdicao) {
             await database.ref(`cards_disponiveis/${idEdicao}`).set(dadosCard);
-            alert("🔄 Card atualizado com sucesso em tempo real!");
+            alert("🔄 Card updated com sucesso em tempo real!");
             cancelarEdicaoCard();
         } else {
             await database.ref('cards_disponiveis').push(dadosCard);
