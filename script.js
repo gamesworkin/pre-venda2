@@ -97,7 +97,7 @@ auth.onAuthStateChanged(user => {
             irParaTela(viewAdmin);
             inicializarPainelAdmin();
             ouvirCardsGlobaisAdmin();
-            ouvirJsonMenuAdmin(); // Carrega o JSON do configurador do menu para o admin
+            ouvirJsonMenuAdmin(); 
         } else {
             database.ref('usuarios/' + user.uid).on('value', async snapshot => {
                 const dados = snapshot.val();
@@ -135,8 +135,8 @@ auth.onAuthStateChanged(user => {
                     
                     irParaTela(viewCliente);
                     ouvirCardsDoCliente(user.uid);
-                    ouvirEConstruirMenuCliente(); // Constrói o menu suspenso se houver dados ativos
-                    configurarBotaoWhatsappDinamico(); // Inicializa a trava de WhatsApp do cliente
+                    ouvirEConstruirMenuCliente(); 
+                    inicializarBotaoWhatsApp();
                 }
             });
         }
@@ -225,7 +225,7 @@ document.getElementById('btn-esqueci-senha').addEventListener('click', async () 
 
 // Envio de Comprovante
 document.getElementById('btn-abrir-formulario').addEventListener('click', () => modalFormEnvio.classList.add('active'));
-document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.classList.remove('active'));
+document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.remove('active'));
 
 const inputComprovante = document.getElementById('comprovante');
 const dropZone = document.getElementById('drop-zone');
@@ -266,9 +266,7 @@ document.getElementById('form-comprovante').addEventListener('submit', async (e)
     finally { btn.innerText = "CONCLUIR INSCRIÇÃO"; btn.disabled = false; }
 });
 
-// ==========================================================================
-// RENDERIZAÇÃO CLIENTE COM TRAVA DE SEGURANÇA NOS CARDS
-// ==========================================================================
+// Renderização Cliente
 function ouvirCardsDoCliente(uid) {
     database.ref(`usuarios/${uid}/jogos_liberados`).on('value', snapshot => {
         gridCardsCliente.innerHTML = "";
@@ -332,7 +330,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================================================
-// NOVO: CONSTRUTOR DINÂMICO DO MENU SUSPENSO E CONFIGURADOR WHATSAPP
+// NOVO: CONSTRUTOR DINÂMICO DO MENU HORIZONTAL (CLIENTE)
 // ==========================================================================
 function ouvirEConstruirMenuCliente() {
     const menuContainer = document.getElementById('area-menu-dinamico');
@@ -381,47 +379,42 @@ function ouvirEConstruirMenuCliente() {
                 menuContainer.style.display = "none";
             }
         } catch (e) {
-            console.error("Erro ao processar JSON do Menu", e);
+            console.error("Erro no processamento do JSON do Menu", e);
             menuContainer.style.display = "none";
         }
     });
 }
 
-function configurarBotaoWhatsappDinamico() {
-    // Insira o número do seu WhatsApp aqui futuramente se quiser fixar, ou use a amarração do admin
-    // Por padrão o botão está direcionado para validação rápida.
-    const seuNumeroWhats = "5500000000000"; 
-    const btnWhats = document.getElementById('btn-whatsapp-suporte');
-    btnWhats.href = `https://api.whatsapp.com/send?phone=${seuNumeroWhats}&text=Ol%C3%A1,%20gostaria%20de%20suporte%20no%20Hub!`;
-    btnWhats.style.display = "flex";
+function inicializarBotaoWhatsApp() {
+    // Insira seu número de WhatsApp com DDD aqui futuramente
+    const whatsappNumero = "5500000000000"; 
+    document.getElementById('btn-whatsapp-flutuante').href = `https://api.whatsapp.com/send?phone=${whatsappNumero}&text=Ol%C3%A1,%20preciso%20de%20ajuda%20no%20Hub!`;
 }
 
 // ==========================================================================
-// GESTÃO DE DADOS DO ADMIN (SALVAR MENU JSON)
+// CONFIGURADOR DE MENU DINÂMICO JSON (ADMIN)
 // ==========================================================================
 function ouvirJsonMenuAdmin() {
     database.ref('configuracao_menu_json').once('value', snapshot => {
-        const dados = snapshot.val() || "";
-        document.getElementById('input-json-menu').value = dados;
+        document.getElementById('input-json-menu').value = snapshot.val() || "";
     });
 }
 
-document.getElementById('btn-json-menu-salvar-alteracao'); // Salvamento do Trigger
 document.getElementById('btn-salvar-json-menu').addEventListener('click', async () => {
     const jsonValue = document.getElementById('input-json-menu').value;
     if (jsonValue.trim()) {
         try {
-            JSON.parse(jsonValue); // Validação de segurança sintática
+            JSON.parse(jsonValue); // Validador sintático de segurança
         } catch (err) {
-            alert("⚠️ JSON Inválido! Verifique a falta de chaves, colchetes ou vírgulas estruturais antes de aplicar.");
+            alert("⚠️ JSON Inválido! Certifique-se de que não faltam chaves, colchetes ou vírgulas.");
             return;
         }
     }
     try {
         await database.ref('configuracao_menu_json').set(jsonValue);
-        alert("🚀 Estrutura do Menu Horizontal sincronizada com sucesso!");
+        alert("🚀 Menu Horizontal Atualizado com Sucesso!");
     } catch (e) {
-        alert("Erro ao gravar estrutura: " + e.message);
+        alert("Erro ao salvar: " + e.message);
     }
 });
 
@@ -519,7 +512,7 @@ function cancelarEdicaoCard() {
     document.getElementById('form-criar-card').reset();
     document.getElementById('titulo-form-card').innerText = "1. Criar Novo Card de Jogo";
     document.getElementById('btn-cancelar-edicao').style.display = "none";
-    document.getElementById('btn-salvar-card').innerText = "SALVAL CARD";
+    document.getElementById('btn-salvar-card').innerText = "SALVAR CARD";
 }
 document.getElementById('btn-cancelar-edicao').addEventListener('click', cancelarEdicaoCard);
 
@@ -743,7 +736,7 @@ document.getElementById('btn-reset-geral-temporada').addEventListener('click', a
     }
 });
 
-// Trava Global Adicional contra clique direito
+// Trava contra clique direito em elementos sensíveis
 document.addEventListener('contextmenu', (e) => {
     if (document.getElementById('view-cliente').classList.contains('active')) {
         const target = e.target.closest('.game-card, .modal-content, img');
