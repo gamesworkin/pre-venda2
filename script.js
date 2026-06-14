@@ -30,9 +30,32 @@ const modalFormEnvio = document.getElementById('modal-formulario-envio');
 const modalDetalhesJogo = document.getElementById('modal-detalhes-jogo');
 const gridCardsCliente = document.getElementById('grid-cards-cliente');
 const listaUsuariosAdmin = document.getElementById('lista-usuarios-admin');
+const inputWhatsApp = document.getElementById('cad-whatsapp');
 
 let usuarioLogadoUid = null;
 let dadosClienteAtual = {};
+
+// Máscara em tempo real para o campo de WhatsApp: (00) 00000-0000
+inputWhatsApp.addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 11) value = value.slice(0, 11);
+    
+    if (value.length > 6) {
+        value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    } else if (value.length > 2) {
+        value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    } else if (value.length > 0) {
+        value = `(${value}`;
+    }
+    e.target.value = value;
+});
+
+// Funções Auxiliares de Validação de E-mail
+function validarFormatoEmail(email) {
+    if (email.toLowerCase() === "teste@teste.com") return true; // Sua exceção permitida
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
 
 // ==========================================================================
 // NAVEGAÇÃO ENTRE TELAS DO APP
@@ -44,7 +67,6 @@ function irParaTela(tela) {
     tela.classList.add('active');
 }
 
-// Controle das Abas de Login/Cadastro
 document.getElementById('tab-login').addEventListener('click', () => {
     document.getElementById('form-login').classList.add('active');
     document.getElementById('form-cadastro-auth').classList.remove('active');
@@ -60,7 +82,7 @@ document.getElementById('tab-cadastro').addEventListener('click', () => {
 });
 
 // ==========================================================================
-// MONITOR DE SESSÃO (CORRIGIDO ANTI-TRAVAMENTO)
+// MONITOR DE SESSÃO
 // ==========================================================================
 auth.onAuthStateChanged(user => {
     if (user) {
@@ -69,11 +91,8 @@ auth.onAuthStateChanged(user => {
             irParaTela(viewAdmin);
             inicializarPainelAdmin();
         } else {
-            // Monitora os dados cadastrais do cliente em tempo real
             database.ref('usuarios/' + user.uid).on('value', snapshot => {
                 const dados = snapshot.val();
-                
-                // AJUSTE SEGURO: Se o usuário logou mas não tem dados no banco ainda
                 if (dados) {
                     dadosClienteAtual = dados;
                     document.getElementById('user-display-name').innerText = `${dados.nome} ${dados.sobrenome}`;
@@ -88,7 +107,6 @@ auth.onAuthStateChanged(user => {
                     irParaTela(viewCliente);
                     ouvirCardsDoCliente(user.uid);
                 } else {
-                    // Caso o registro no banco não exista, desloga por segurança ou limpa a tela
                     document.getElementById('user-display-name').innerText = "Jogador Novo";
                     document.getElementById('area-compra-pendente').style.display = "block";
                     irParaTela(viewCliente);
@@ -101,26 +119,39 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-
 function deslogar() {
     auth.signOut().then(() => location.reload());
 }
 
 // ==========================================================================
-// AUTENTICAÇÃO: CRIAR CONTA E ACESSAR
+// AUTENTICAÇÃO: CRIAR CONTA COM VALIDAÇÕES EXTRAS
 // ==========================================================================
 document.getElementById('form-cadastro-auth').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nome = document.getElementById('cad-nome').value.trim();
     const sobrenome = document.getElementById('cad-sobrenome').value.trim();
+    const whatsapp = inputWhatsApp.value.replace(/\D/g, ""); // Salva apenas os números limpos no banco
     const email = document.getElementById('cad-email').value.trim();
     const senha = document.getElementById('cad-senha').value;
 
+    // Bloqueio de Segurança para E-mails inválidos
+    if (!validarFormatoEmail(email)) {
+        alert("⚠️ Por favor, insira um endereço de e-mail válido para garantir a segurança e recuperação da sua conta!");
+        return;
+    }
+
+    if (whatsapp.length < 10) {
+        alert("⚠️ Insira um número de WhatsApp válido com DDD.");
+        return;
+    }
+
     try {
         const credencial = await auth.createUserWithEmailAndPassword(email, senha);
+        // Grava no Realtime Database incluindo o número do WhatsApp
         await database.ref('usuarios/' + credencial.user.uid).set({
             nome: nome,
             sobrenome: sobrenome,
+            whatsapp: whatsapp,
             email: email,
             status_cadastro: "pendente_pagamento",
             jogos_liberados: {}
@@ -228,13 +259,14 @@ document.getElementById('form-comprovante').addEventListener('submit', async (e)
         const ext = arquivo.name.split('.').pop();
         const nomeFinal = `${dadosClienteAtual.nome}_${dadosClienteAtual.sobrenome}`.replace(/\s+/g, '_').toLowerCase() + `.${ext}`;
 
+        // AGORA ENVIANDO O WHATSAPP REAL DO BANCO DIRETO PARA A SUA PLANILHA!
         await fetch(GOOGLE_WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify({
                 nome: dadosClienteAtual.nome,
                 sobrenome: dadosClienteAtual.sobrenome,
-                whatsapp: "Interno-Auth",
+                whatsapp: dadosClienteAtual.whatsapp || "Não informado", 
                 cidade: "Plataforma",
                 estado: "Hub",
                 nomeArquivo: nomeFinal,
@@ -284,7 +316,6 @@ function abrirModalJogo(card) {
     document.getElementById('modal-jogo-titulo').innerText = card.titulo;
     document.getElementById('modal-jogo-descricao').innerText = card.descricao;
     
-    // CAMADA DE SEGURANÇA 2: Impede o usuário de clicar e arrastar a capa do jogo
     imgCapa.addEventListener('dragstart', (e) => e.preventDefault());
 
     const containerBotoes = document.getElementById('modal-jogo-botoes');
@@ -299,9 +330,7 @@ function abrirModalJogo(card) {
                 a.target = '_blank';
                 a.innerText = btn.texto;
                 
-                // Anti-arrastar para os botões também (previne mover o link para a barra de abas)
                 a.addEventListener('dragstart', (e) => e.preventDefault());
-                
                 containerBotoes.appendChild(a);
             }
         });
@@ -313,21 +342,17 @@ function fecharModalJogo() {
     modalDetalhesJogo.classList.remove('active');
 }
 
-// CAMADA DE SEGURANÇA 1: Bloqueia 100% o Botão Direito (Menu de Contexto) dentro do Modal do Jogo
 modalDetalhesJogo.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     return false;
 });
 
-// CAMADA DE SEGURANÇA 3: Trava atalhos maliciosos de inspeção de código quando o modal está aberto
 window.addEventListener('keydown', (e) => {
     if (modalDetalhesJogo.classList.contains('active')) {
-        // Bloqueia F12
         if (e.key === "F12") {
             e.preventDefault();
             return false;
         }
-        // Bloqueia Ctrl+Shift+I (Inspecionar) e Ctrl+U (Ver código-fonte)
         if (e.ctrlKey && (e.shiftKey && e.key === "I" || e.key === "u" || e.key === "U")) {
             e.preventDefault();
             return false;
@@ -336,7 +361,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================================================
-// PAINEL ADMINISTRATIVO: CRIAR CARDS E INJETAR EM USUÁRIOS
+// PAINEL ADMINISTRATIVO: VER DADOS COMPLETOS E INJETAR CARDS
 // ==========================================================================
 function inicializarPainelAdmin() {
     database.ref('usuarios').on('value', snapshot => {
@@ -349,10 +374,12 @@ function inicializarPainelAdmin() {
             const userBox = document.createElement('div');
             userBox.className = 'user-item';
             
+            // Exibe também o número do WhatsApp e o e-mail no painel de administração
             userBox.innerHTML = `
                 <div class="user-info">
                     <p><strong>Nome:</strong> ${users[uid].nome} ${users[uid].sobrenome}</p>
                     <p><strong>E-mail:</strong> ${users[uid].email}</p>
+                    <p><strong>WhatsApp:</strong> ${users[uid].whatsapp || 'Não cadastrado'}</p>
                     <p><strong>Status:</strong> <span style="color: ${users[uid].status_cadastro === 'pago' ? '#00ff66' : '#ffaa00'}">${users[uid].status_cadastro.toUpperCase()}</span></p>
                 </div>
                 <select id="select-game-${uid}">
@@ -414,7 +441,7 @@ async function injetarCardParaUsuario(uid) {
             await database.ref(`usuarios/${uid}/jogos_liberados/${selectedCardId}`).set(true);
             alert("🔥 Card injetado e acesso concedido com sucesso!");
         } else {
-            alert("Status atualizado para PAGO!");
+            alert("Status updated para PAGO!");
         }
     } catch (error) {
         alert("Erro na operação admin: " + error.message);
