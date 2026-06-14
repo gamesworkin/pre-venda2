@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamHub - Bomba Patch</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div id="view-auth" class="view active">
+        <div class="auth-container">
+            <h2>ÁREA DO JOGADOR</h2>
+            <div class="tabs">
+                <button id="tab-login" class="active">Entrar</button>
+                <button id="tab-cadastro">Criar Conta</button>
+            </div>
+            
+            <form id="form-login" class="auth-form active">
+                <input type="email" id="login-email" placeholder="Seu E-mail" required>
+                <input type="password" id="login-senha" placeholder="Sua Senha" required>
+                <button type="submit" class="btn-gamer">LOGAR NO HUB</button>
+            </form>
+
+            <form id="form-cadastro-auth" class="auth-form">
+                <input type="text" id="cad-nome" placeholder="Nome" required>
+                <input type="text" id="cad-sobrenome" placeholder="Sobrenome" required>
+                <input type="email" id="cad-email" placeholder="E-mail" required>
+                <input type="password" id="cad-senha" placeholder="Senha (Mín. 6 dígitos)" required>
+                <button type="submit" class="btn-gamer">CADASTRAR E ENTRAR</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="view-cliente" class="view">
+        <header>
+            <span>Jogador: <strong id="user-display-name">...</strong></span>
+            <button onclick="deslogar()" class="btn-sair">Sair</button>
+        </header>
+
+        <div id="area-compra-pendente" class="box-alerta">
+            <h3>Você ainda não possui jogos na sua conta!</h3>
+            <p>Faça o envio do seu comprovante para liberar seu acesso instantâneo.</p>
+            <button id="btn-abrir-formulario" class="btn-gamer">Adquira já o seu jogo</button>
+        </div>
+
+        <div id="modal-formulario-envio" class="modal">
+            <button id="btn-fechar-form">Voltar</button>
+        </div>
+
+        <main class="hub-jogos">
+            <h2>Seus Jogos Liberados</h2>
+            <div id="grid-cards-cliente" class="grid-cards">
+                </div>
+        </main>
+    </div>
+
+    <div id="view-admin" class="view">
+        <header>
+            <h2>PAINEL DE CONTROLE ADMIN</h2>
+            <button onclick="deslogar()" class="btn-sair">Sair</button>
+        </header>
+
+        <div class="admin-grid">
+            <section class="admin-box">
+                <h3>1. Criar Novo Card de Jogo (JSON)</h3>
+                <form id="form-criar-card">
+                    <input type="text" id="card-titulo" placeholder="Título do Jogo" required>
+                    <input type="url" id="card-capa" placeholder="URL da Imagem da Capa" required>
+                    <textarea id="card-descricao" placeholder="Descrição/Informações do Jogo" required></textarea>
+                    
+                    <h4>Links de Download (Até 4)</h4>
+                    <div class="link-group">
+                        <input type="text" id="btn-txt-1" placeholder="Texto Botão 1 (Ex: Baixar ISO)">
+                        <input type="url" id="btn-url-1" placeholder="URL Download 1">
+                    </div>
+                    <div class="link-group">
+                        <input type="text" id="btn-txt-2" placeholder="Texto Botão 2">
+                        <input type="url" id="btn-url-2" placeholder="URL Download 2">
+                    </div>
+                    <div class="link-group">
+                        <input type="text" id="btn-txt-3" placeholder="Texto Botão 3">
+                        <input type="url" id="btn-url-3" placeholder="URL Download 3">
+                    </div>
+                    <div class="link-group">
+                        <input type="text" id="btn-txt-4" placeholder="Texto Botão 4">
+                        <input type="url" id="btn-url-4" placeholder="URL Download 4">
+                    </div>
+                    <button type="submit" class="btn-gamer">SALVAR CARD NO SISTEMA</button>
+                </form>
+            </section>
+
+            <section class="admin-box">
+                <h3>2. Gerenciar Pré-Vendas (Injetar Cards)</h3>
+                <div id="lista-usuarios-admin">
+                    </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="modal-detalhes-jogo" class="modal-jogos">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModalJogo()">&times;</span>
+            <img id="modal-jogo-capa" src="" alt="Capa">
+            <h3 id="modal-jogo-titulo">Título</h3>
+            <p id="modal-jogo-descricao">Descrição</p>
+            <div id="modal-jogo-botoes" class="area-botoes-download">
+                </div>
+        </div>
+    </div>
+
+</body>
+</html>
