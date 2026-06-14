@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamHub - Bomba Patch</title>
     <link rel="stylesheet" href="style.css">
+    
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -15,8 +16,8 @@
         <div class="auth-container">
             <h2>ÁREA DO JOGADOR</h2>
             <div class="tabs">
-                <button id="tab-login" class="active">Entrar</button>
-                <button id="tab-cadastro">Criar Conta</button>
+                <button id="tab-login" class="tab-btn active">Entrar</button>
+                <button id="tab-cadastro" class="tab-btn">Criar Conta</button>
             </div>
             
             <form id="form-login" class="auth-form active">
@@ -36,49 +37,68 @@
     </div>
 
     <div id="view-cliente" class="view">
-        <header>
+        <header class="app-header">
             <span>Jogador: <strong id="user-display-name">...</strong></span>
             <button onclick="deslogar()" class="btn-sair">Sair</button>
         </header>
 
-        <div id="area-compra-pendente" class="box-alerta">
-            <h3>Você ainda não possui jogos na sua conta!</h3>
-            <p>Faça o envio do seu comprovante para liberar seu acesso instantâneo.</p>
-            <button id="btn-abrir-formulario" class="btn-gamer">Adquira já o seu jogo</button>
-        </div>
+        <div class="container">
+            <div id="area-compra-pendente" class="box-alerta">
+                <h3>Você ainda não possui jogos ativos!</h3>
+                <p>Envie o seu comprovante para liberar o seu acesso instantâneo ao Hub.</p>
+                <button id="btn-abrir-formulario" class="btn-gamer">Adquira já o seu jogo</button>
+            </div>
 
-        <div id="modal-formulario-envio" class="modal">
-            <button id="btn-fechar-form">Voltar</button>
-        </div>
-
-        <main class="hub-jogos">
-            <h2>Seus Jogos Liberados</h2>
-            <div id="grid-cards-cliente" class="grid-cards">
+            <div id="modal-formulario-envio" class="modal-form">
+                <div class="modal-form-content">
+                    <div class="modal-form-header">
+                        <h3>Confirmar Pagamento da Pré-Venda</h3>
+                        <button id="btn-fechar-form" class="btn-fechar">&times;</button>
+                    </div>
+                    
+                    <form id="form-comprovante">
+                        <p class="instrucao">Faça o upload do seu comprovante PIX (Imagens até 1MB).</p>
+                        
+                        <div id="drop-zone" class="drop-zone">
+                            <p>Arrastar & Soltar comprovante aqui ou <span class="destaque">Clique para buscar</span></p>
+                            <input type="file" id="comprovante" accept="image/*,application/pdf" style="display:none">
+                        </div>
+                        <div id="file-info" class="file-info">Nenhum arquivo selecionado</div>
+                        
+                        <button type="submit" id="btn-enviar-tudo" class="btn-gamer">CONCLUIR INSCRIÇÃO</button>
+                    </form>
                 </div>
-        </main>
+            </div>
+
+            <main class="hub-jogos">
+                <h2>Seus Jogos Liberados</h2>
+                <div id="grid-cards-cliente" class="grid-cards">
+                    </div>
+            </main>
+        </div>
     </div>
 
     <div id="view-admin" class="view">
-        <header>
+        <header class="app-header">
             <h2>PAINEL DE CONTROLE ADMIN</h2>
             <button onclick="deslogar()" class="btn-sair">Sair</button>
         </header>
 
-        <div class="admin-grid">
+        <div class="container admin-grid">
             <section class="admin-box">
                 <h3>1. Criar Novo Card de Jogo (JSON)</h3>
                 <form id="form-criar-card">
                     <input type="text" id="card-titulo" placeholder="Título do Jogo" required>
                     <input type="url" id="card-capa" placeholder="URL da Imagem da Capa" required>
-                    <textarea id="card-descricao" placeholder="Descrição/Informações do Jogo" required></textarea>
+                    <textarea id="card-descricao" placeholder="Descrição/Informações do Jogo" rows="4" required></textarea>
                     
-                    <h4>Links de Download (Até 4)</h4>
+                    <h4>Configurar Botões de Download (Até 4)</h4>
                     <div class="link-group">
-                        <input type="text" id="btn-txt-1" placeholder="Texto Botão 1 (Ex: Baixar ISO)">
+                        <input type="text" id="btn-txt-1" placeholder="Texto Botão 1 (Ex: Baixar ISO PS2)">
                         <input type="url" id="btn-url-1" placeholder="URL Download 1">
                     </div>
                     <div class="link-group">
-                        <input type="text" id="btn-txt-2" placeholder="Texto Botão 2">
+                        <input type="text" id="btn-txt-2" placeholder="Texto Botão 2 (Ex: Baixar OPL)">
                         <input type="url" id="btn-url-2" placeholder="URL Download 2">
                     </div>
                     <div class="link-group">
@@ -94,8 +114,8 @@
             </section>
 
             <section class="admin-box">
-                <h3>2. Gerenciar Pré-Vendas (Injetar Cards)</h3>
-                <div id="lista-usuarios-admin">
+                <h3>2. Usuários Registrados (Injetar Cards)</h3>
+                <div id="lista-usuarios-admin" class="lista-usuarios">
                     </div>
             </section>
         </div>
@@ -104,13 +124,18 @@
     <div id="modal-detalhes-jogo" class="modal-jogos">
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModalJogo()">&times;</span>
-            <img id="modal-jogo-capa" src="" alt="Capa">
-            <h3 id="modal-jogo-titulo">Título</h3>
-            <p id="modal-jogo-descricao">Descrição</p>
-            <div id="modal-jogo-botoes" class="area-botoes-download">
+            <div class="modal-body">
+                <img id="modal-jogo-capa" src="" alt="Capa do Jogo">
+                <div class="modal-info">
+                    <h3 id="modal-jogo-titulo">Título</h3>
+                    <p id="modal-jogo-descricao">Descrição</p>
+                    <div id="modal-jogo-botoes" class="area-botoes-download">
+                        </div>
                 </div>
+            </div>
         </div>
     </div>
 
+    <script src="script.js"></script>
 </body>
 </html>
