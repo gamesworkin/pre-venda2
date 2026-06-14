@@ -76,14 +76,14 @@ document.getElementById('tab-solic-pendentes').addEventListener('click', () => {
     filtroAdminAtual = "pendentes";
     document.getElementById('tab-solic-pendentes').classList.add('active');
     document.getElementById('tab-solic-concluidos').classList.remove('active');
-    document.getElementById('container-reset-pre-venda').style.display = "none"; // Oculta o botão de limpar na aba de pendentes
+    document.getElementById('container-reset-pre-venda').style.display = "none";
     inicializarPainelAdmin();
 });
 document.getElementById('tab-solic-concluidos').addEventListener('click', () => {
     filtroAdminAtual = "concluidos";
     document.getElementById('tab-solic-concluidos').classList.add('active');
     document.getElementById('tab-solic-pendentes').classList.remove('active');
-    document.getElementById('container-reset-pre-venda').style.display = "block"; // Exibe o botão apenas na aba de Aprovados/Concluídos
+    document.getElementById('container-reset-pre-venda').style.display = "block";
     inicializarPainelAdmin();
 });
 
@@ -302,10 +302,7 @@ function abrirModalJogo(card) {
             buttonElement.style.cursor = "pointer";
             
             buttonElement.addEventListener('dragstart', (e) => e.preventDefault());
-            
-            buttonElement.addEventListener('click', () => {
-                window.open(btn.url, '_blank');
-            });
+            buttonElement.addEventListener('click', () => { window.open(btn.url, '_blank'); });
             
             container.appendChild(buttonElement);
         });
@@ -463,6 +460,7 @@ function inicializarPainelAdmin() {
             const userBox = document.createElement('div');
             userBox.className = 'user-item';
 
+            // ABA 1: PENDENTES / ENVIADOS (COM NOVO BOTÃO DE DELETAR REGISTRO ISOLADO)
             if (filtroAdminAtual === "pendentes") {
                 const temComp = users[uid].comprovante_base64 && users[uid].comprovante_base64.length > 10;
                 const btnComp = temComp 
@@ -481,6 +479,8 @@ function inicializarPainelAdmin() {
                         <option value="">-- Selecione o Card para Injetar --</option>
                     </select>
                     <button class="btn-inject" onclick="injetarCardParaUsuario('${uid}')">Confirmar Pagamento & Liberar Hub</button>
+                    
+                    <button class="btn-sair" onclick="deletarUsuarioDoBancoTotal('${uid}', '${users[uid].email}')" style="width:100%; font-size:0.8rem; padding:6px; margin-top:5px; background:#211212; border:1px dashed #ff3333; color:#ff5555;">🗑️ Deletar Registro do Banco (Limpar Fantasma)</button>
                 `;
             } else {
                 let listaJogosAtivosHtml = "";
@@ -587,7 +587,21 @@ async function excluirSolicitacaoEComprovante(uid) {
     }
 }
 
-// NOVO: Ação do Botão de Reset Geral para nova temporada de pré-vendas (Varre todos os usuários em um único lote)
+// NOVO: Função para Apagar o Registro de um Usuário Individual direto da aba de Pendentes (Limpa fantasmas do banco)
+async function deletarUsuarioDoBancoTotal(uid, email) {
+    const confirmacao = confirm(`🚨 ATENÇÃO - EXCLUSÃO DE REGISTRO:\n\nDeseja deletar DEFINITIVAMENTE a pasta de dados do utilizador [ ${email} ] do banco de dados?\n\nEsta ação vai remover o perfil do seu painel e limpar o registro de testes.\n\nNota: Certifique-se de que ele já foi apagado do menu Auth do Firebase.`);
+    
+    if (confirmacao) {
+        try {
+            await database.ref(`usuarios/${uid}`).remove();
+            alert("🧹 Registro apagado com sucesso! O fantasma sumiu do painel.");
+        } catch (error) {
+            alert("Erro ao remover registro: " + error.message);
+        }
+    }
+}
+
+// Reset Geral de Temporada
 document.getElementById('btn-reset-geral-temporada').addEventListener('click', async () => {
     const confirmacao1 = confirm("⚠️ ATENÇÃO MÁXIMA:\n\nVocê está prestes a realizar uma LIMPEZA EM LOTE no painel.\nIsso vai fazer com que TODOS os usuários aprovados voltem a ficar em branco (vazio), prontos para enviar um comprovante para o NOVO card.\n\nOs jogos antigos que eles já possuem NÃO serão perdidos. Deseja continuar?");
     
@@ -599,23 +613,17 @@ document.getElementById('btn-reset-geral-temporada').addEventListener('click', a
                 btnReset.innerText = "LIMPANDO BANCO DE DADOS...";
                 btnReset.disabled = true;
 
-                // Busca todos os usuários do banco
                 const snapshot = await database.ref('usuarios').once('value');
                 const usuarios = snapshot.val();
 
                 if (usuarios) {
                     const atualizacoesEmLote = {};
-                    
                     Object.keys(usuarios).forEach(uid => {
-                        // Ignora a conta do administrador
                         if (usuarios[uid].email !== "admin@admin.com") {
-                            // Prepara o reset mantendo a integridade da conta
                             atualizacoesEmLote[`usuarios/${uid}/status_cadastro`] = "pendente_pagamento";
                             atualizacoesEmLote[`usuarios/${uid}/comprovante_base64`] = "";
                         }
                     });
-
-                    // Aplica as atualizações de uma única vez no Firebase (Multi-path update)
                     await database.ref().update(atualizacoesEmLote);
                     alert("🧹 Hub atualizado com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
                 } else {
