@@ -517,3 +517,23 @@ input:focus, textarea:focus, select:focus {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+/* Botão Otimizado para o Admin Auditar Comprovantes */
+.btn-visualizar-comprovante {
+    background: #1f2a3c;
+    border: 1px solid #ffaa00;
+    color: #ffaa00;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin: 8px 0 12px 0;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.btn-visualizar-comprovante:hover {
+    background: #ffaa00;
+    color: #000;
+    box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+}
