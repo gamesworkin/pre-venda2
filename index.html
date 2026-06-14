@@ -5,16 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamHub - Bomba Patch</title>
     
+    <!-- Link do Favicon apontando para a raiz do repositório -->
     <link rel="icon" type="image/x-icon" href="fav.ico">
     
+    <!-- Link para o arquivo CSS Externo -->
     <link rel="stylesheet" href="style.css">
     
+    <!-- Scripts do Firebase (SDKs Necessários) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
+    <!-- ========================================== -->
+    <!-- TELA 1: LOGIN / CADASTRO                   -->
+    <!-- ========================================== -->
     <div id="view-auth" class="view active">
         <div class="auth-container">
             <h2>ÁREA DO JOGADOR</h2>
@@ -23,16 +29,19 @@
                 <button id="tab-cadastro" class="tab-btn">Criar Conta</button>
             </div>
             
+            <!-- Formulário de Login -->
             <form id="form-login" class="auth-form active">
                 <input type="email" id="login-email" placeholder="Seu E-mail" required>
                 <input type="password" id="login-senha" placeholder="Sua Senha" required>
                 <button type="submit" id="btn-logar" class="btn-gamer">LOGAR NO HUB</button>
                 
+                <!-- Link de Recuperação de Senha -->
                 <div class="forget-password-container">
                     <button type="button" id="btn-esqueci-senha" class="btn-link">Esqueci minha senha</button>
                 </div>
             </form>
 
+            <!-- Formulário de Cadastro -->
             <form id="form-cadastro-auth" class="auth-form">
                 <input type="text" id="cad-nome" placeholder="Nome" required>
                 <input type="text" id="cad-sobrenome" placeholder="Sobrenome" required>
@@ -44,6 +53,9 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- TELA 2: DASHBOARD DO CLIENTE               -->
+    <!-- ========================================== -->
     <div id="view-cliente" class="view">
         <header class="app-header">
             <span>Jogador: <strong id="user-display-name">...</strong></span>
@@ -52,15 +64,19 @@
 
         <div class="container">
             
+            <!-- MENU HORIZONTAL SUSPENSO DINÂMICO -->
             <nav id="area-menu-dinamico" class="nav-dinamica-container">
                 <ul id="container-links-menu" class="nav-dinamica-list">
-                    </ul>
+                    <!-- Categorias e subcategorias injetadas via JS -->
+                </ul>
             </nav>
 
+            <!-- Central de Compras Inteligente Dinâmica -->
             <div id="area-compra-pendente" class="box-alerta" style="display: none;">
                 <h3 id="texto-alerta-titulo">Garante as novas atualizações!</h3>
                 <p id="texto-alerta-desc">Envie o seu novo comprovante para liberar mais jogos no seu painel.</p>
                 
+                <!-- Destaque Comercial do Valor de R$ 10,00 -->
                 <div class="container-preco-tag">
                     Valor de liberação por Patch: <span class="tag-preco-gamer">R$ 10,00</span>
                 </div>
@@ -68,6 +84,7 @@
                 <button id="btn-abrir-formulario" class="btn-gamer">Adquira já o seu jogo</button>
             </div>
 
+            <!-- MODAL INTERNO: FORMULÁRIO DE ENVIO -->
             <div id="modal-formulario-envio" class="modal-form">
                 <div class="modal-form-content">
                     <div class="modal-form-header">
@@ -89,13 +106,16 @@
                 </div>
             </div>
 
+            <!-- HUB DE JOGOS LIBERADOS -->
             <main class="hub-jogos">
                 <h2>Seus Jogos Liberados</h2>
                 <div id="grid-cards-cliente" class="grid-cards">
-                    </div>
+                    <!-- Cards injetados dinamicamente via JS -->
+                </div>
             </main>
         </div>
 
+        <!-- BOTÃO FLUTUANTE DO WHATSAPP -->
         <a id="btn-whatsapp-flutuante" href="#" target="_blank" class="whatsapp-btn-float">
             <svg viewBox="0 0 24 24">
                 <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a10.022 10.022 0 001.34 4.975L2 22l5.163-1.355A9.957 9.957 0 0012.007 22c5.507 0 9.991-4.479 9.992-9.986A9.999 9.999 0 0012.012 2zm5.521 14.21c-.244.689-1.22 1.254-1.684 1.32-.464.065-.926.122-2.934-.674-2.571-1.02-4.208-3.606-4.336-3.776-.127-.17-1.021-1.356-1.021-2.586 0-1.229.614-1.833.859-2.087.245-.254.53-.318.706-.318.177 0 .355.001.508.009.161.007.38-.062.595.45.244.579.833 2.031.905 2.175.072.144.12.312.023.502-.097.191-.145.312-.29.48-.145.17-.304.378-.433.508-.145.143-.296.3-.127.587.168.288.751 1.238 1.611 2.002.16.143.433.261.678.143.245-.117.98-.415 1.246-.74.266-.325.21-.24.428-.12.217.121 1.385.653 1.624.77.239.118.397.177.457.277.06.1.06.577-.184 1.266z"/>
@@ -103,6 +123,9 @@
         </a>
     </div>
 
+    <!-- ========================================== -->
+    <!-- TELA 3: PAINEL ADMINISTRATIVO              -->
+    <!-- ========================================== -->
     <div id="view-admin" class="view">
         <header class="app-header">
             <h2>PAINEL DE CONTROLE ADMIN</h2>
@@ -110,6 +133,7 @@
         </header>
 
         <div class="container admin-grid">
+            <!-- Painel Esquerdo: Criação de Cards e Menu Construtor Visual -->
             <section class="admin-box">
                 <h3 id="titulo-form-card">1. Criar Novo Card de Jogo</h3>
                 <form id="form-criar-card">
@@ -142,11 +166,18 @@
                     </div>
                 </form>
 
+                <!-- NOVO FORMULÁRIO: CONSTRUTOR VISUAL DE CATEGORIAS E SUB-LINKS -->
                 <div class="admin-menu-json-box">
-                    <h3>2. Menu Suspenso Horizontal (JSON)</h3>
-                    <p>Insira as categorias e links bônus do painel do cliente. Deixe em branco para ocultar.</p>
-                    <textarea id="input-json-menu" rows="5" placeholder='[\n  {\n    "categoria": "🎁 Conteúdos Bônus",\n    "subcategorias": [\n      {"texto": "Senha do WinRAR", "url": "https://link.com"}\n    ]\n  }\n]'></textarea>
-                    <button type="button" id="btn-salvar-json-menu" class="btn-gamer" style="padding:10px; font-size:0.85rem;">Salvar Estrutura do Menu</button>
+                    <h3>2. Construtor Visual do Menu Horizontal</h3>
+                    <p style="margin-bottom: 15px; font-size: 0.8rem; color: #8899a6;">Monte as abas e os links de conteúdos bônus que aparecerão na tela do seu cliente.</p>
+                    
+                    <!-- Container onde os blocos de categorias serão criados visualmente -->
+                    <div id="construtor-menu-visual-container"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="button" onclick="adicionarBlocoCategoriaVisual()" class="btn-visualizar-comprovante" style="margin:0; border-color: #00ff66; color: #00ff66; background: rgba(0,255,102,0.05);">+ Nova Categoria</button>
+                        <button type="button" id="btn-salvar-visual-menu" class="btn-gamer" style="padding: 10px; font-size: 0.85rem; width: auto; flex: 1;">Salvar e Atualizar Menu</button>
+                    </div>
                 </div>
 
                 <div style="margin-top: 30px; border-top: 2px solid #1f2a3c; padding-top: 20px;">
@@ -155,10 +186,12 @@
                         <button id="btn-exportar-cards" class="btn-visualizar-comprovante" style="width:auto; margin:0; padding:6px 12px;">📥 Exportar (JSON)</button>
                     </div>
                     <div id="lista-cards-criados" class="lista-usuarios">
-                        </div>
+                        <!-- Cards injetados via JS -->
+                    </div>
                 </div>
             </section>
 
+            <!-- Painel Direito: Gerenciamento Qualificado de Usuários/Pedidos -->
             <section class="admin-box">
                 <h3>3. Controle de Usuários e Pedidos</h3>
                 
@@ -167,17 +200,20 @@
                     <button id="tab-solic-concluidos" class="tab-btn" style="font-size:0.85rem; padding:8px;">Acessos Liberados</button>
                 </div>
 
+                <!-- Área com o Botão de Limpeza / Reset em Lote para nova Pré-Venda -->
                 <div id="container-reset-pre-venda" style="margin-bottom: 15px; display: none; background: #231212; border: 1px dashed #ff3333; padding: 10px; border-radius: 6px; text-align: center;">
                     <p style="font-size: 0.8rem; color: #ff9999; margin-bottom: 8px;">🔄 Fim da temporada? Limpe o painel de aprovados para iniciar uma nova pré-venda.</p>
                     <button id="btn-reset-geral-temporada" class="btn-sair" style="margin: 0; width: 100%; height: 35px; padding: 0; font-size: 0.85rem; background: #4d1414; border: 1px solid #ff3333;">🧹 LIMPAR TODOS OS APROVADOS (NOVA PRÉ-VENDA)</button>
                 </div>
                 
                 <div id="lista-usuarios-admin" class="lista-usuarios">
-                    </div>
+                    <!-- Clientes filtrados injetados via JS -->
+                </div>
             </section>
         </div>
     </div>
 
+    <!-- JANELA FLUTUANTE (MODAL DETALHES DO JOGO) -->
     <div id="modal-detalhes-jogo" class="modal-jogos">
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModalJogo()">&times;</span>
@@ -187,12 +223,14 @@
                     <h3 id="modal-jogo-titulo">Título</h3>
                     <p id="modal-jogo-descricao">Descrição</p>
                     <div id="modal-jogo-botoes" class="area-botoes-download">
-                        </div>
+                        <!-- Botões de Download -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Link para o script JS Externo -->
     <script src="script.js"></script>
 </body>
 </html>
