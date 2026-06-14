@@ -97,7 +97,7 @@ auth.onAuthStateChanged(user => {
             irParaTela(viewAdmin);
             inicializarPainelAdmin();
             ouvirCardsGlobaisAdmin();
-            ouvirJsonMenuAdmin(); 
+            ouvirEPovoarMenuVisualAdmin(); // Puxa dados salvos e monta os formulários visuais do menu
         } else {
             database.ref('usuarios/' + user.uid).on('value', async snapshot => {
                 const dados = snapshot.val();
@@ -225,7 +225,7 @@ document.getElementById('btn-esqueci-senha').addEventListener('click', async () 
 
 // Envio de Comprovante
 document.getElementById('btn-abrir-formulario').addEventListener('click', () => modalFormEnvio.classList.add('active'));
-document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.remove('active'));
+document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.classList.remove('active'));
 
 const inputComprovante = document.getElementById('comprovante');
 const dropZone = document.getElementById('drop-zone');
@@ -330,7 +330,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================================================
-// NOVO: CONSTRUTOR DINÂMICO DO MENU HORIZONTAL (CLIENTE)
+// CONSTRUTOR DINÂMICO DO MENU HORIZONTAL (CLIENTE)
 // ==========================================================================
 function ouvirEConstruirMenuCliente() {
     const menuContainer = document.getElementById('area-menu-dinamico');
@@ -392,29 +392,127 @@ function inicializarBotaoWhatsApp() {
 }
 
 // ==========================================================================
-// CONFIGURADOR DE MENU DINÂMICO JSON (ADMIN)
+// NOVO: MOTOR CONSTRUTOR VISUAL DE MENU (FORMULÁRIOS AUTOMATIZADOS)
 // ==========================================================================
-function ouvirJsonMenuAdmin() {
+function ouvirEPovoarMenuVisualAdmin() {
+    const containerVisual = document.getElementById('construtor-menu-visual-container');
+    
     database.ref('configuracao_menu_json').once('value', snapshot => {
-        document.getElementById('input-json-menu').value = snapshot.val() || "";
+        containerVisual.innerHTML = "";
+        const rawJson = snapshot.val() || "";
+        
+        if (!rawJson.trim()) return;
+
+        try {
+            const categoriasData = JSON.parse(rawJson);
+            if (Array.isArray(categoriasData)) {
+                categoriasData.forEach(cat => {
+                    adicionarBlocoCategoriaVisual(cat.categoria, cat.subcategorias);
+                });
+            }
+        } catch (e) {
+            console.error("Nenhum menu visual salvo ou formato inválido.", e);
+        }
     });
 }
 
-document.getElementById('btn-salvar-json-menu').addEventListener('click', async () => {
-    const jsonValue = document.getElementById('input-json-menu').value;
-    if (jsonValue.trim()) {
-        try {
-            JSON.parse(jsonValue); // Validador sintático de segurança
-        } catch (err) {
-            alert("⚠️ JSON Inválido! Certifique-se de que não faltam chaves, colchetes ou vírgulas.");
-            return;
-        }
+function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = []) {
+    const containerVisual = document.getElementById('construtor-menu-visual-container');
+    const blocoId = 'cat-' + Date.now() + Math.floor(Math.random() * 100);
+
+    const divBloco = document.createElement('div');
+    divBloco.className = 'bloco-categoria-visual';
+    divBloco.id = blocoId;
+
+    divBloco.innerHTML = `
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items:center;">
+            <input type="text" class="input-nome-categoria" placeholder="Título da Categoria (Ex: 🎁 Conteúdos Bônus)" value="${nomeCategoria}" style="margin-bottom:0; font-weight:bold; border-color:#ffaa00;">
+            <button type="button" onclick="removerBlocoCategoriaVisual('${blocoId}')" class="btn-sair" style="margin-top:0; padding:6px 12px; height:38px;">✖</button>
+        </div>
+        <div class="container-subcategorias-rows" style="padding-left: 15px; border-left: 2px dashed #242f41;">
+            <!-- Linhas de subcategorias entrarão aqui -->
+        </div>
+        <button type="button" onclick="adicionarLinhaSubcategoriaVisual('${blocoId}')" class="btn-link" style="color:#00ff66; margin-top: 5px; font-size: 0.8rem; text-align: left; display:block;">+ Adicionar Link/Subcategoria</button>
+    `;
+
+    containerVisual.appendChild(divBloco);
+
+    // Se existirem subcategorias salvas previamente, povoa as linhas
+    if (subcategoriasArr && subcategoriasArr.length > 0) {
+        subcategoriasArr.forEach(sub => {
+            adicionarLinhaSubcategoriaVisual(blocoId, sub.texto, sub.url);
+        });
     }
+}
+
+function adicionarLinhaSubcategoriaVisual(blocoId, txtLink = "", urlLink = "") {
+    const bloco = document.getElementById(blocoId);
+    const containerRows = bloco.querySelector('.container-subcategorias-rows');
+    const rowId = 'row-' + Date.now() + Math.floor(Math.random() * 100);
+
+    const divRow = document.createElement('div');
+    divRow.className = 'linha-subcategoria-visual';
+    divRow.id = rowId;
+
+    divRow.innerHTML = `
+        <input type="text" class="sub-txt" placeholder="Texto do Link" value="${txtLink}" style="flex: 1;">
+        <input type="url" class="sub-url" placeholder="URL Destino (https://...)" value="${urlLink}" style="flex: 1.5;">
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="btn-sair" style="background:#421414; color:#ff3333; margin-top:0; border:1px solid #ff3333; height:38px; padding:0 10px;">✖</button>
+    `;
+
+    containerRows.appendChild(divRow);
+}
+
+function removerBlocoCategoriaVisual(blocoId) {
+    if (confirm("Deseja realmente remover toda essa categoria e seus links associados?")) {
+        document.getElementById(blocoId).remove();
+    }
+}
+
+// Intercepta o clique de salvar e gera o JSON de forma invisível
+document.getElementById('btn-salvar-visual-menu').addEventListener('click', async () => {
+    const blocos = document.querySelectorAll('.bloco-categoria-visual');
+    const estruturaMenuFinal = [];
+
+    let dadosValidos = true;
+
+    blocos.forEach(bloco => {
+        const nomeCat = bloco.querySelector('.input-nome-categoria').value.trim();
+        if (!nomeCat) return;
+
+        const subcategorias = [];
+        const linhasSub = bloco.querySelectorAll('.linha-subcategoria-visual');
+
+        linhasSub.forEach(linha => {
+            const txt = linha.querySelector('.sub-txt').value.trim();
+            const url = linha.querySelector('.sub-url').value.trim();
+
+            if (txt && url) {
+                subcategorias.push({ texto: txt, url: url });
+            } else if (txt || url) {
+                dadosValidos = false; // Se preencheu um mas esqueceu o outro
+            }
+        });
+
+        estruturaMenuFinal.push({
+            categoria: nomeCat,
+            subcategorias: subcategorias
+        });
+    });
+
+    if (!dadosValidos) {
+        alert("⚠️ Operação Recusada! Existem links de subcategorias incompletos (com o texto ou a URL vazia). Verifique os campos!");
+        return;
+    }
+
     try {
-        await database.ref('configuracao_menu_json').set(jsonValue);
-        alert("🚀 Menu Horizontal Atualizado com Sucesso!");
+        // Converte em String JSON limpa e compacta para salvar no Firebase
+        const jsonFinalString = estruturaMenuFinal.length > 0 ? JSON.stringify(estruturaMenuFinal, null, 2) : "";
+        
+        await database.ref('configuracao_menu_json').set(jsonFinalString);
+        alert("🚀 Estrutura de Menu atualizada e publicada com sucesso em tempo real!");
     } catch (e) {
-        alert("Erro ao salvar: " + e.message);
+        alert("Erro ao salvar menu: " + e.message);
     }
 });
 
@@ -442,7 +540,7 @@ document.getElementById('form-criar-card').addEventListener('submit', async (e) 
     try {
         if (idEdicao) {
             await database.ref(`cards_disponiveis/${idEdicao}`).set(dadosCard);
-            alert("🔄 Card atualizado com sucesso em tempo real!");
+            alert("🔄 Card updated com sucesso em tempo real!");
             cancelarEdicaoCard();
         } else {
             await database.ref('cards_disponiveis').push(dadosCard);
