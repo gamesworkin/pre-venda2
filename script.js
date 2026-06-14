@@ -16,7 +16,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
 
-// URL do seu Web App do Google Sheets (Para onde vai o comprovante PIX)
+// URL do seu Web App do Google Sheets (Mantido para backup se desejar)
 const GOOGLE_WEB_APP_URL = "COLE_AQUI_O_LINK_DO_APP_DA_WEB_DO_GOOGLE";
 
 // ==========================================================================
@@ -50,11 +50,35 @@ inputWhatsApp.addEventListener('input', (e) => {
     e.target.value = value;
 });
 
-// Funções Auxiliares de Validação de E-mail
-function validarFormatoEmail(email) {
-    if (email.toLowerCase() === "teste@teste.com") return true; // Sua exceção permitida
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+// ==========================================================================
+// FILTRO CIRÚRGICO DE PROVEDORES DE E-MAIL CONVENCIONAIS
+// ==========================================================================
+function validarProvedorEmail(email) {
+    const emailLimpo = email.trim().toLowerCase();
+    
+    // Libera o seu usuário de testes padrão
+    if (emailLimpo === "teste@teste.com") return true;
+    
+    // Lista de domínios reais e convencionais do mercado
+    const provedoresValidos = [
+        "gmail.com", 
+        "hotmail.com", 
+        "outlook.com", 
+        "outlook.com.br",
+        "yahoo.com", 
+        "yahoo.com.br", 
+        "icloud.com", 
+        "live.com", 
+        "uol.com.br", 
+        "terra.com.br",
+        "bol.com.br",
+        "ig.com.br",
+        "oi.com.br"
+    ];
+    
+    // Extrai o domínio que vem após a @
+    const dominio = emailLimpo.split('@')[1];
+    return provedoresValidos.includes(dominio);
 }
 
 // ==========================================================================
@@ -124,19 +148,19 @@ function deslogar() {
 }
 
 // ==========================================================================
-// AUTENTICAÇÃO: CRIAR CONTA COM VALIDAÇÕES EXTRAS
+// AUTENTICAÇÃO: CRIAR CONTA COM FILTRO DE PROVEDOR REAL
 // ==========================================================================
 document.getElementById('form-cadastro-auth').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nome = document.getElementById('cad-nome').value.trim();
     const sobrenome = document.getElementById('cad-sobrenome').value.trim();
-    const whatsapp = inputWhatsApp.value.replace(/\D/g, ""); // Salva apenas os números limpos no banco
+    const whatsapp = inputWhatsApp.value.replace(/\D/g, "");
     const email = document.getElementById('cad-email').value.trim();
     const senha = document.getElementById('cad-senha').value;
 
-    // Bloqueio de Segurança para E-mails inválidos
-    if (!validarFormatoEmail(email)) {
-        alert("⚠️ Por favor, insira um endereço de e-mail válido para garantir a segurança e recuperação da sua conta!");
+    // AQUI OCORRE O BLOQUEIO SE NÃO FOR UM PROVEDOR CONVENCIONAL RECONHECIDO
+    if (!validarProvedorEmail(email)) {
+        alert("⚠️ Inscrição Recusada!\n\nPor favor, utilize um e-mail convencional válido (ex: @gmail.com, @hotmail.com, @outlook.com).\n\nEste endereço é obrigatório para que você consiga recuperar sua senha no futuro caso seja necessário!");
         return;
     }
 
@@ -147,13 +171,13 @@ document.getElementById('form-cadastro-auth').addEventListener('submit', async (
 
     try {
         const credencial = await auth.createUserWithEmailAndPassword(email, senha);
-        // Grava no Realtime Database incluindo o número do WhatsApp
         await database.ref('usuarios/' + credencial.user.uid).set({
             nome: nome,
             sobrenome: sobrenome,
             whatsapp: whatsapp,
             email: email,
             status_cadastro: "pendente_pagamento",
+            comprovante_base64: "", // Nasce vazio esperando o upload
             jogos_liberados: {}
         });
     } catch (error) {
@@ -174,7 +198,7 @@ document.getElementById('form-login').addEventListener('submit', async (e) => {
 });
 
 // ==========================================================================
-// MODAL INTERNO DO FORMULÁRIO DE COMPRA
+// FORMULÁRIO DE COMPRA INTERNO (COMPRESSÃO & SALVAMENTO NO DATABASE)
 // ==========================================================================
 document.getElementById('btn-abrir-formulario').addEventListener('click', () => modalFormEnvio.classList.add('active'));
 document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.classList.remove('active'));
@@ -200,7 +224,7 @@ dropZone.addEventListener('drop', (e) => {
 function verificarArquivo(file) {
     if (!file) return;
     if (file.type === "application/pdf" && file.size > 35840) {
-        alert("⚠️ PDFs devem ter no máximo 35KB. Dica: Envie um print screen (foto) do PIX, elas são auto-comprimidas!");
+        alert("⚠️ PDFs devem ter no máximo 35KB. Dica: Envie uma imagem (print screen) do PIX, elas são comprimidas automaticamente!");
         inputComprovante.value = "";
         fileInfo.innerText = "Use uma imagem ou PDF pequeno";
         return;
@@ -256,23 +280,22 @@ document.getElementById('form-comprovante').addEventListener('submit', async (e)
         const base64Str = await otimizarEConvertreParaBase64(arquivo);
         let base64Final = arquivo.type === "application/pdf" ? base64Str : base64Str.slice(0, 49000);
 
-        const ext = arquivo.name.split('.').pop();
-        const nomeFinal = `${dadosClienteAtual.nome}_${dadosClienteAtual.sobrenome}`.replace(/\s+/g, '_').toLowerCase() + `.${ext}`;
+        // SALVAMENTO DIRETAMENTE NO DATABASE DO USUÁRIO PARA O ADMIN VER
+        await database.ref(`usuarios/${usuarioLogadoUid}/comprovante_base64`).set(base64Final);
+        await database.ref(`usuarios/${usuarioLogadoUid}/status_cadastro`).set("comprovante_enviado");
 
-        // AGORA ENVIANDO O WHATSAPP REAL DO BANCO DIRETO PARA A SUA PLANILHA!
-        await fetch(GOOGLE_WEB_APP_URL, {
+        // Backup opcional na planilha
+        fetch(GOOGLE_WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify({
                 nome: dadosClienteAtual.nome,
                 sobrenome: dadosClienteAtual.sobrenome,
-                whatsapp: dadosClienteAtual.whatsapp || "Não informado", 
-                cidade: "Plataforma",
-                estado: "Hub",
-                nomeArquivo: nomeFinal,
-                arquivoBase64: base64Final
+                whatsapp: dadosClienteAtual.whatsapp || "Não informado",
+                cidade: "Plataforma", estado: "Hub",
+                nomeArquivo: "comprovante.jpg", arquivoBase64: base64Final
             })
-        });
+        }).catch(err => console.log("Erro backup planilha"));
 
         alert("🚀 Comprovante enviado com sucesso! Aguarde a liberação do administrador.");
         modalFormEnvio.classList.remove('active');
@@ -285,7 +308,7 @@ document.getElementById('form-comprovante').addEventListener('submit', async (e)
 });
 
 // ==========================================================================
-// RENDERIZAÇÃO DE JOGOS E POPUP FLUTUANTE COM PROTEÇÃO ANTI-CÓPIA
+// RENDERIZAÇÃO DE JOGOS E POPUP FLUTUANTE (CLIENTE)
 // ==========================================================================
 function ouvirCardsDoCliente(uid) {
     database.ref(`usuarios/${uid}/jogos_liberados`).on('value', snapshot => {
@@ -329,7 +352,6 @@ function abrirModalJogo(card) {
                 a.href = btn.url;
                 a.target = '_blank';
                 a.innerText = btn.texto;
-                
                 a.addEventListener('dragstart', (e) => e.preventDefault());
                 containerBotoes.appendChild(a);
             }
@@ -342,26 +364,17 @@ function fecharModalJogo() {
     modalDetalhesJogo.classList.remove('active');
 }
 
-modalDetalhesJogo.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    return false;
-});
-
+modalDetalhesJogo.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
 window.addEventListener('keydown', (e) => {
     if (modalDetalhesJogo.classList.contains('active')) {
-        if (e.key === "F12") {
-            e.preventDefault();
-            return false;
-        }
-        if (e.ctrlKey && (e.shiftKey && e.key === "I" || e.key === "u" || e.key === "U")) {
-            e.preventDefault();
-            return false;
+        if (e.key === "F12" || (e.ctrlKey && (e.shiftKey && e.key === "I" || e.key === "u" || e.key === "U"))) {
+            e.preventDefault(); return false;
         }
     }
 });
 
 // ==========================================================================
-// PAINEL ADMINISTRATIVO: VER DADOS COMPLETOS E INJETAR CARDS
+// PAINEL ADMINISTRATIVO: VISUALIZAR COMPROVANTE & CONCEDER ACESSO
 // ==========================================================================
 function inicializarPainelAdmin() {
     database.ref('usuarios').on('value', snapshot => {
@@ -374,23 +387,47 @@ function inicializarPainelAdmin() {
             const userBox = document.createElement('div');
             userBox.className = 'user-item';
             
-            // Exibe também o número do WhatsApp e o e-mail no painel de administração
+            // Verifica se existe um comprovante salvo para gerar o botão dinâmico
+            const temComprovante = users[uid].comprovante_base64 && users[uid].comprovante_base64.length > 10;
+            const botaoComprovante = temComprovante 
+                ? `<button class="btn-visualizar-comprovante" onclick="abrirComprovanteNovaAba('${uid}')">👁️ Ver Comprovante Enviado</button>` 
+                : `<p style="color:#ff3333; font-size:0.85rem; margin:5px 0;">Nenhum comprovante anexado ainda</p>`;
+
             userBox.innerHTML = `
                 <div class="user-info">
-                    <p><strong>Nome:</strong> ${users[uid].nome} ${users[uid].sobrenome}</p>
-                    <p><strong>E-mail:</strong> ${users[uid].email}</p>
+                    <p><strong>Nome Completo:</strong> ${users[uid].nome} ${users[uid].sobrenome}</p>
+                    <p><strong>E-mail Cadastrado:</strong> ${users[uid].email}</p>
                     <p><strong>WhatsApp:</strong> ${users[uid].whatsapp || 'Não cadastrado'}</p>
-                    <p><strong>Status:</strong> <span style="color: ${users[uid].status_cadastro === 'pago' ? '#00ff66' : '#ffaa00'}">${users[uid].status_cadastro.toUpperCase()}</span></p>
+                    <p><strong>Status Atual:</strong> <span style="color: ${users[uid].status_cadastro === 'pago' ? '#00ff66' : '#ffaa00'}">${users[uid].status_cadastro.toUpperCase()}</span></p>
+                    ${botaoComprovante}
                 </div>
                 <select id="select-game-${uid}">
                     <option value="">-- Selecione o Card para Injetar --</option>
                 </select>
-                <button class="btn-inject" onclick="injetarCardParaUsuario('${uid}')">Liberar Jogo / Update Status</button>
+                <button class="btn-inject" onclick="injetarCardParaUsuario('${uid}')">Confirmar Pagamento & Injetar Card</button>
             `;
             listaUsuariosAdmin.appendChild(userBox);
             
             alimentarSelectComCards(document.getElementById(`select-game-${uid}`), users[uid].jogos_liberados);
         });
+    });
+}
+
+// Abre a string Base64 decodificada em uma aba independente para auditoria do Admin
+function abrirComprovanteNovaAba(uid) {
+    database.ref(`usuarios/${uid}/comprovante_base64`).once('value', snapshot => {
+        const base64Data = snapshot.val();
+        if (base64Data) {
+            const novaAba = window.open();
+            // Cria um ambiente HTML básico na aba nova contendo a mídia pura
+            if (base64Data.startsWith("data:application/pdf")) {
+                novaAba.document.write(`<iframe src="${base64Data}" width="100%" height="100%" style="border:none;"></iframe>`);
+            } else {
+                novaAba.document.write(`<body style="background:#0b0e14; margin:0; display:flex; align-items:center; justify-content:center;"><img src="${base64Data}" style="max-width:100%; max-height:100vh; border:2px solid #00ff66; border-radius:8px;"></body>`);
+            }
+        } else {
+            alert("Não foi possível carregar o arquivo.");
+        }
     });
 }
 
@@ -408,7 +445,6 @@ function alimentarSelectComCards(selectElement, jogosJaLiberados = {}) {
 
 document.getElementById('form-criar-card').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const botoes = [];
     for (let i = 1; i <= 4; i++) {
         const txt = document.getElementById(`btn-txt-${i}`).value.trim();
@@ -434,14 +470,13 @@ document.getElementById('form-criar-card').addEventListener('submit', async (e) 
 
 async function injetarCardParaUsuario(uid) {
     const selectedCardId = document.getElementById(`select-game-${uid}`).value;
-    
     try {
         await database.ref(`usuarios/${uid}/status_cadastro`).set("pago");
         if (selectedCardId) {
             await database.ref(`usuarios/${uid}/jogos_liberados/${selectedCardId}`).set(true);
-            alert("🔥 Card injetado e acesso concedido com sucesso!");
+            alert("🔥 Pagamento Confirmado e Card Injetado!");
         } else {
-            alert("Status updated para PAGO!");
+            alert("Status atualizado para PAGO!");
         }
     } catch (error) {
         alert("Erro na operação admin: " + error.message);
