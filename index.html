@@ -3,172 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamHub - Bomba Patch</title>
-    
+    <title>StreamHub - Painel Gamer</title>
     <link rel="icon" type="image/x-icon" href="fav.ico">
-    
     <link rel="stylesheet" href="style.css">
-    
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* Botão Flutuante do WhatsApp */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #25d366;
+            color: #fff;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4), 0 0 10px rgba(37, 211, 102, 0.3);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            animation: pulseWhatsapp 2s infinite;
+        }
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 20px rgba(37, 211, 102, 0.6);
+        }
+        @keyframes pulseWhatsapp {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
+        /* Menu Suspenso Horizontal Dinâmico */
+        .nav-dinamica-container {
+            width: 100%;
+            background: #121824;
+            border-bottom: 1px solid #1f2a3d;
+            margin-bottom: 20px;
+            display: none; /* Exibido via JS se houver dados */
+            border-radius: 6px;
+        }
+        .nav-dinamica-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .nav-dinamica-item {
+            position: relative;
+        }
+        .nav-dinamica-link {
+            display: block;
+            padding: 14px 20px;
+            color: #b3c0ce;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .nav-dinamica-link:hover, .nav-dinamica-item:hover .nav-dinamica-link {
+            color: #00ff66;
+            background: rgba(0, 255, 102, 0.05);
+        }
+        /* Submenu Deslizante Elegante */
+        .submenu-dinamico {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #161e2e;
+            border: 1px solid #24334c;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            min-width: 220px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-radius: 0 0 6px 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+        .submenu-dinamico li a {
+            display: block;
+            padding: 12px 16px;
+            color: #bcc9d6;
+            text-decoration: none;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #1d293d;
+            transition: all 0.2s ease;
+        }
+        .submenu-dinamico li:last-child a {
+            border-bottom: none;
+        }
+        .submenu-dinamico li a:hover {
+            background: #1f2c42;
+            color: #00ff66;
+            padding-left: 20px;
+        }
+        .nav-dinamica-item:hover .submenu-dinamico {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        /* Destaque Comercial de Preço */
+        .tag-preco-premium {
+            background: linear-gradient(135deg, #00ff66 0%, #00993d 100%);
+            color: #05070a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-size: 0.95rem;
+            display: inline-block;
+            margin-left: 6px;
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+            text-shadow: none;
+        }
+    </style>
 </head>
 <body>
 
     <div id="view-auth" class="view active">
         <div class="auth-container">
-            <h2>ÁREA DO JOGADOR</h2>
-            <div class="tabs">
-                <button id="tab-login" class="tab-btn active">Entrar</button>
-                <button id="tab-cadastro" class="tab-btn">Criar Conta</button>
-            </div>
+            <h1 class="logo">STREAM<span>HUB</span></h1>
             
+            <div class="tabs">
+                <button id="tab-login" class="tab-btn active">LOGIN</button>
+                <button id="tab-cadastro" class="tab-btn">CADASTRO</button>
+            </div>
+
             <form id="form-login" class="auth-form active">
-                <input type="email" id="login-email" placeholder="Seu E-mail" required>
-                <input type="password" id="login-senha" placeholder="Sua Senha" required>
-                <button type="submit" id="btn-logar" class="btn-gamer">LOGAR NO HUB</button>
-                
-                <div class="forget-password-container">
-                    <button type="button" id="btn-esqueci-senha" class="btn-link">Esqueci minha senha</button>
+                <div class="input-group">
+                    <label>E-mail Corporativo/Pessoal</label>
+                    <input type="email" id="login-email" required placeholder="seu-email@provedor.com">
                 </div>
+                <div class="input-group">
+                    <label>Senha de Acesso</label>
+                    <input type="password" id="login-senha" required placeholder="••••••••">
+                </div>
+                <button type="submit" id="btn-logar" class="btn-gamer">LOGAR NO HUB</button>
+                <button type="button" id="btn-esqueci-senha" class="btn-link">Esqueceu sua senha? Clique para recuperar</button>
             </form>
 
             <form id="form-cadastro-auth" class="auth-form">
-                <input type="text" id="cad-nome" placeholder="Nome" required>
-                <input type="text" id="cad-sobrenome" placeholder="Sobrenome" required>
-                <input type="tel" id="cad-whatsapp" placeholder="WhatsApp com DDD (Apenas números)" maxlength="15" required>
-                <input type="email" id="cad-email" placeholder="E-mail Válido" required>
-                <input type="password" id="cad-senha" placeholder="Senha (Mín. 6 dígitos)" required>
-                <button type="submit" class="btn-gamer">CADASTRAR E ENTRAR</button>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Nome</label>
+                        <input type="text" id="cad-nome" required placeholder="Ex: João">
+                    </div>
+                    <div class="input-group">
+                        <label>Sobrenome</label>
+                        <input type="text" id="cad-sobrenome" required placeholder="Ex: Silva">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>WhatsApp (Suporte e Alertas)</label>
+                    <input type="text" id="cad-whatsapp" required placeholder="(00) 00000-0000">
+                </div>
+                <div class="input-group">
+                    <label>E-mail Válido</label>
+                    <input type="email" id="cad-email" required placeholder="Ex: jogador@gmail.com">
+                </div>
+                <div class="input-group">
+                    <label>Criar Senha Forte</label>
+                    <input type="password" id="cad-senha" required placeholder="Mínimo 6 caracteres">
+                </div>
+                <button type="submit" class="btn-gamer">CRIAR MINHA CONTA GAMER</button>
             </form>
         </div>
     </div>
 
     <div id="view-cliente" class="view">
-        <header class="app-header">
-            <span>Jogador: <strong id="user-display-name">...</strong></span>
-            <button onclick="deslogar()" class="btn-sair">Sair</button>
+        <header class="hub-header">
+            <h2 class="logo-mini">STREAM<span>HUB</span></h2>
+            <div class="user-profile">
+                <span id="user-display-name">Jogador</span>
+                <button class="btn-sair" onclick="deslogar()">SAIR DO PAINEL</button>
+            </div>
         </header>
 
-        <div class="container">
-            <div id="area-compra-pendente" class="box-alerta" style="display: none;">
-                <h3 id="texto-alerta-titulo">Garante as novas atualizações!</h3>
-                <p id="texto-alerta-desc">Envie o seu novo comprovante para liberar mais jogos no seu painel.</p>
+        <div class="hub-container">
+            
+            <nav id="area-menu-dinamico" class="nav-dinamica-container">
+                <ul id="container-links-menu" class="nav-dinamica-list"></ul>
+            </nav>
+
+            <div id="area-compra-pendente" class="alert-box" style="display: none;">
+                <h3 id="texto-alerta-titulo">Você ainda não possui jogos ativos!</h3>
+                <p id="texto-alerta-desc">Envie o seu comprovante para liberar o seu acesso instantâneo ao Hub.</p>
+                <p style="margin: 12px 0; font-size: 0.9rem; color: #b3c0ce;">Taxa única de liberação por Patch: <span class="tag-preco-premium">R$ 10,00</span></p>
                 <button id="btn-abrir-formulario" class="btn-gamer">Adquira já o seu jogo</button>
             </div>
 
-            <div id="modal-formulario-envio" class="modal-form">
-                <div class="modal-form-content">
-                    <div class="modal-form-header">
-                        <h3>Confirmar Pagamento da Pré-Venda</h3>
-                        <button id="btn-fechar-form" class="btn-fechar">&times;</button>
-                    </div>
-                    
-                    <form id="form-comprovante">
-                        <p class="instrucao">Faça o upload do seu comprovante PIX (Imagens até 1MB).</p>
-                        
-                        <div id="drop-zone" class="drop-zone">
-                            <p>Arrastar & Soltar comprovante aqui ou <span class="destaque">Clique para buscar</span></p>
-                            <input type="file" id="comprovante" accept="image/*,application/pdf" style="display:none">
-                        </div>
-                        <div id="file-info" class="file-info">Nenhum arquivo selecionado</div>
-                        
-                        <button type="submit" id="btn-enviar-tudo" class="btn-gamer">CONCLUIR INSCRIÇÃO</button>
-                    </form>
-                </div>
-            </div>
+            <h3 class="section-title">🎮 SEUS ENCARTES E JOGOS ATIVOS</h3>
+            <div id="grid-cards-cliente" class="cards-grid"></div>
+        </div>
 
-            <main class="hub-jogos">
-                <h2>Seus Jogos Liberados</h2>
-                <div id="grid-cards-cliente" class="grid-cards">
-                    </div>
-            </main>
+        <a id="btn-whatsapp-suporte" href="#" target="_blank" class="whatsapp-float" style="display: none;">
+            <svg style="width:30px; height:30px; fill:#fff; vertical-align:middle;" viewBox="0 0 24 24">
+                <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a10.022 10.022 0 001.34 4.975L2 22l5.163-1.355A9.957 9.957 0 0012.007 22c5.507 0 9.991-4.479 9.992-9.986A9.999 9.999 0 0012.012 2zm5.521 14.21c-.244.689-1.22 1.254-1.684 1.32-.464.065-.926.122-2.934-.674-2.571-1.02-4.208-3.606-4.336-3.776-.127-.17-1.021-1.356-1.021-2.586 0-1.229.614-1.833.859-2.087.245-.254.53-.318.706-.318.177 0 .355.001.508.009.161.007.38-.062.595.45.244.579.833 2.031.905 2.175.072.144.12.312.023.502-.097.191-.145.312-.29.48-.145.17-.304.378-.433.508-.145.143-.296.3-.127.587.168.288.751 1.238 1.611 2.002.16.143.433.261.678.143.245-.117.98-.415 1.246-.74.266-.325.21-.24.428-.12.217.121 1.385.653 1.624.77.239.118.397.177.457.277.06.1.06.577-.184 1.266z"/>
+            </svg>
+        </a>
+    </div>
+
+    <div id="modal-formulario-envio" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Submeter Comprovante Oficial</h3>
+                <button id="btn-fechar-form" class="btn-close">&times;</button>
+            </div>
+            <form id="form-comprovante">
+                <div class="drop-zone" id="drop-zone">
+                    <p>Clique ou Arraste o arquivo do Comprovante PIX aqui</p>
+                    <span style="font-size: 0.75rem; color:#667c99;">Formatos suportados: PNG, JPG ou PDF (Máx: 1MB)</span>
+                </div>
+                <input type="file" id="comprovante" accept="image/*,application/pdf" style="display: none;">
+                <div id="file-info" style="margin-top: 10px; font-size: 0.85rem; color:#00ff66;"></div>
+                
+                <button type="submit" id="btn-enviar-tudo" class="btn-gamer" style="margin-top: 20px;">CONCLUIR INSCRIÇÃO</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-detalhes-jogo" class="modal-overlay">
+        <div class="modal-content modal-game-detail">
+            <button class="btn-close-game" onclick="fecharModalJogo()">&times;</button>
+            <img id="modal-jogo-capa" src="" alt="Capa">
+            <div class="modal-game-info">
+                <h2 id="modal-jogo-titulo">Título do Jogo</h2>
+                <p id="modal-jogo-descricao">Descrição do patch...</p>
+                <div id="modal-jogo-botoes" class="container-botoes-dinamicos"></div>
+            </div>
         </div>
     </div>
 
     <div id="view-admin" class="view">
-        <header class="app-header">
-            <h2>PAINEL DE CONTROLE ADMIN</h2>
-            <button onclick="deslogar()" class="btn-sair">Sair</button>
+        <header class="hub-header" style="background: #141b29; border-bottom:2px solid #ffaa00;">
+            <h2 class="logo-mini" style="color:#ffaa00;">STREAM<span>ADMIN</span></h2>
+            <button class="btn-sair" onclick="deslogar()">DESLOGAR ADMIN</button>
         </header>
 
-        <div class="container admin-grid">
-            <section class="admin-box">
-                <h3 id="titulo-form-card">1. Criar Novo Card de Jogo</h3>
+        <div class="admin-grid">
+            <div class="admin-card">
+                <div class="tabs-admin">
+                    <button id="tab-solic-pendentes" class="tab-btn-admin active">SOLICITAÇÕES PENDENTES</button>
+                    <button id="tab-solic-concluidos" class="tab-btn-admin">JOGADORES APROVADOS</button>
+                </div>
+                <div id="lista-usuarios-admin" class="usuarios-list-container"></div>
+                
+                <div id="container-reset-pre-venda" style="display: none; padding: 15px; border-top: 1px dashed #34425a;">
+                    <button id="btn-reset-geral-temporada" style="background:#421414; color:#ff5555; border:1px solid #ff3333; width:100%; padding:10px; font-weight:bold; cursor:pointer; border-radius:4px;">
+                         Pancada de Reset Geral (Nova Pré-Venda)
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h3 id="titulo-form-card" class="panel-title">1. Criar Novo Card de Jogo</h3>
                 <form id="form-criar-card">
-                    <input type="hidden" id="card-id-edicao" value="">
-                    
-                    <input type="text" id="card-titulo" placeholder="Título do Jogo" required>
-                    <input type="url" id="card-capa" placeholder="URL da Imagem da Capa" required>
-                    <textarea id="card-descricao" placeholder="Descrição/Informações do Jogo" rows="3" required></textarea>
-                    
-                    <h4>Configurar Botões de Download (Até 4)</h4>
-                    <div class="link-group">
-                        <input type="text" id="btn-txt-1" placeholder="Texto Botão 1 (Ex: Baixar ISO PS2)">
-                        <input type="url" id="btn-url-1" placeholder="URL Download 1">
+                    <input type="hidden" id="card-id-edicao">
+                    <div class="input-group">
+                        <label>Título do Jogo/Patch</label>
+                        <input type="text" id="card-titulo" required>
                     </div>
-                    <div class="link-group">
-                        <input type="text" id="btn-txt-2" placeholder="Texto Botão 2 (Ex: Baixar OPL)">
-                        <input type="url" id="btn-url-2" placeholder="URL Download 2">
+                    <div class="input-group">
+                        <label>URL Absoluta da Capa</label>
+                        <input type="url" id="card-capa" required>
                     </div>
-                    <div class="link-group">
+                    <div class="input-group">
+                        <label>Descrição Otimizada do Encarte</label>
+                        <textarea id="card-descricao" rows="3" required></textarea>
+                    </div>
+
+                    <label style="font-size:0.8rem; color:#ffaa00; font-weight:bold; display:block; margin-bottom:5px;">Configuração de Links Internos (Até 4):</label>
+                    <div class="inputs-links-row">
+                        <input type="text" id="btn-txt-1" placeholder="Texto Botão 1">
+                        <input type="url" id="btn-url-1" placeholder="Link Botão 1">
+                    </div>
+                    <div class="inputs-links-row">
+                        <input type="text" id="btn-txt-2" placeholder="Texto Botão 2">
+                        <input type="url" id="btn-url-2" placeholder="Link Botão 2">
+                    </div>
+                    <div class="inputs-links-row">
                         <input type="text" id="btn-txt-3" placeholder="Texto Botão 3">
-                        <input type="url" id="btn-url-3" placeholder="URL Download 3">
+                        <input type="url" id="btn-url-3" placeholder="Link Botão 3">
                     </div>
-                    <div class="link-group">
+                    <div class="inputs-links-row">
                         <input type="text" id="btn-txt-4" placeholder="Texto Botão 4">
-                        <input type="url" id="btn-url-4" placeholder="URL Download 4">
+                        <input type="url" id="btn-url-4" placeholder="Link Botão 4">
                     </div>
-                    <div style="display:flex; gap:10px;">
-                        <button type="submit" id="btn-salvar-card" class="btn-gamer">SALVAR CARD</button>
-                        <button type="button" id="btn-cancelar-edicao" class="btn-sair" style="display:none; margin-top:0; height:45px;">Cancelar</button>
+
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button type="submit" id="btn-salvar-card" class="btn-gamer" style="background:#ffaa00; color:#000;">SALVAR CARD</button>
+                        <button type="button" id="btn-cancelar-edicao" class="btn-sair" style="display:none; margin:0;">CANCELAR</button>
                     </div>
                 </form>
 
-                <div style="margin-top: 30px; border-top: 2px solid #1f2a3c; padding-top: 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3>Cards Cadastrados</h3>
-                        <button id="btn-exportar-cards" class="btn-visualizar-comprovante" style="width:auto; margin:0; padding:6px 12px;">📥 Exportar (JSON)</button>
+                <div style="margin-top:30px; padding-top:20px; border-top:2px solid #24334c;">
+                    <h3 class="panel-title" style="color:#00ff66;">2. Menu Suspenso Dinâmico (JSON)</h3>
+                    <p style="font-size:0.75rem; color:#8899a6; margin-bottom:10px;">Insira a estrutura de categorias e subcategorias. Deixe em branco se não quiser exibir o menu para os clientes.</p>
+                    <div class="input-group">
+                        <textarea id="input-json-menu" rows="6" placeholder='[\n  {\n    "categoria": "Bônus",\n    "subcategorias": [\n      {"texto": "Option 1", "url": "https://link1.com"}\n    ]\n  }\n]' style="font-family: monospace; font-size:0.8rem; background:#0b0f19; color:#00ff66; border-color:#24334c;"></textarea>
                     </div>
-                    <div id="lista-cards-criados" class="lista-usuarios">
-                        </div>
-                </div>
-            </section>
-
-            <section class="admin-box">
-                <h3>2. Controle de Usuários e Pedidos</h3>
-                
-                <div class="tabs" style="margin-bottom:15px; background: #0b0e14; padding: 5px; border-radius:6px;">
-                    <button id="tab-solic-pendentes" class="tab-btn active" style="font-size:0.85rem; padding:8px;">Pendentes / Enviados</button>
-                    <button id="tab-solic-concluidos" class="tab-btn" style="font-size:0.85rem; padding:8px;">Acessos Liberados</button>
+                    <button type="button" id="btn-salvar-json-menu" class="btn-gamer" style="font-size:0.8rem; padding:8px 15px;">Salvar Estrutura do Menu</button>
                 </div>
 
-                <div id="container-reset-pre-venda" style="margin-bottom: 15px; display: none; background: #231212; border: 1px dashed #ff3333; padding: 10px; border-radius: 6px; text-align: center;">
-                    <p style="font-size: 0.8rem; color: #ff9999; margin-bottom: 8px;">🔄 Fim da temporada? Limpe o painel de aprovados para iniciar uma nova pré-venda.</p>
-                    <button id="btn-reset-geral-temporada" class="btn-sair" style="margin: 0; width: 100%; height: 35px; padding: 0; font-size: 0.85rem; background: #4d1414; border: 1px solid #ff3333;">🧹 LIMPAR TODOS OS APROVADOS (NOVA PRÉ-VENDA)</button>
+                <div style="margin-top: 30px; display:flex; justify-content:space-between; align-items:center;">
+                    <h3 class="panel-title" style="margin:0;">Cards Cadastrados no Hub</h3>
+                    <button type="button" id="btn-exportar-cards" style="background:none; border:1px solid #445566; color:#aaa; font-size:0.75rem; padding:4px 8px; cursor:pointer;">Exportar Backup JSON</button>
                 </div>
-                
-                <div id="lista-usuarios-admin" class="lista-usuarios">
-                    </div>
-            </section>
-        </div>
-    </div>
-
-    <div id="modal-detalhes-jogo" class="modal-jogos">
-        <div class="modal-content">
-            <span class="close-modal" onclick="fecharModalJogo()">&times;</span>
-            <div class="modal-body">
-                <img id="modal-jogo-capa" src="" alt="Capa do Jogo">
-                <div class="modal-info">
-                    <h3 id="modal-jogo-titulo">Título</h3>
-                    <p id="modal-jogo-descricao">Descrição</p>
-                    <div id="modal-jogo-botoes" class="area-botoes-download">
-                        </div>
-                </div>
+                <div id="lista-cards-criados" class="cards-admin-list"></div>
             </div>
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <script src="script.js"></script>
 </body>
 </html>
