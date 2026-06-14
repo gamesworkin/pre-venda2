@@ -250,6 +250,16 @@ input:focus, textarea:focus, select:focus {
     animation: scaleUp 0.3s ease;
 }
 
+.modal-form-content {
+    background-color: #121824;
+    border: 2px solid #242f41;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 10px;
+    padding: 25px;
+    animation: scaleUp 0.3s ease;
+}
+
 .modal-form-header {
     display: flex;
     justify-content: space-between;
@@ -451,7 +461,7 @@ input:focus, textarea:focus, select:focus {
     align-items: center;
     justify-content: center;
     padding: 15px;
-    overflow-y: auto; /* Garante rolagem em telas pequenas */
+    overflow-y: auto;
 }
 
 .modal-jogos.active {
@@ -468,7 +478,7 @@ input:focus, textarea:focus, select:focus {
     padding: 25px;
     box-shadow: 0 0 35px rgba(0, 255, 102, 0.25);
     animation: scaleUp 0.3s ease;
-    max-height: 90vh; /* Não deixa extrapolar a tela do celular */
+    max-height: 90vh;
     overflow-y: auto;
 }
 
@@ -483,7 +493,6 @@ input:focus, textarea:focus, select:focus {
 }
 .close-modal:hover { color: #ff3333; }
 
-/* Corpo estrutural em Flexbox */
 .modal-body {
     display: flex;
     gap: 20px;
@@ -496,7 +505,7 @@ input:focus, textarea:focus, select:focus {
     object-fit: cover;
     border-radius: 8px;
     border: 2px solid #1f2a3c;
-    flex-shrink: 0; /* Impede a imagem de esmagar */
+    flex-shrink: 0;
 }
 
 .modal-info {
@@ -509,7 +518,7 @@ input:focus, textarea:focus, select:focus {
     font-size: 1.5rem;
     color: #00ff66;
     margin-bottom: 12px;
-    padding-right: 15px; /* Evita bater no botão Fechar */
+    padding-right: 15px;
 }
 
 #modal-jogo-descricao {
@@ -524,7 +533,7 @@ input:focus, textarea:focus, select:focus {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: auto; /* Cola os botões no rodapé do flex */
+    margin-top: auto;
 }
 
 .btn-download-dinamico {
@@ -556,13 +565,13 @@ input:focus, textarea:focus, select:focus {
     }
     
     .modal-body {
-        flex-direction: column; /* Transforma Row em Coluna no celular */
+        flex-direction: column;
         align-items: center;
         gap: 15px;
     }
     
     #modal-jogo-capa {
-        width: 160px; /* Reduz tamanho da capa para não ocupar a tela toda */
+        width: 160px;
         height: 220px;
     }
     
@@ -579,7 +588,7 @@ input:focus, textarea:focus, select:focus {
     }
     
     .area-botoes-download {
-        width: 100%; /* Botões ocupam largura total no celular */
+        width: 100%;
     }
 }
 
