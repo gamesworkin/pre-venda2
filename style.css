@@ -1,0 +1,519 @@
+/* ==========================================================================
+   CONFIGURAÇÕES GERAIS E RESETS
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #0b0e14;
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Gerenciador de Exibição das Telas (Views) */
+.view {
+    display: none;
+    min-height: 100vh;
+}
+
+.view.active {
+    display: block;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ==========================================================================
+   COMPONENTES GAMER (BOTÕES E INPUTS)
+   ========================================================================== */
+.btn-gamer {
+    width: 100%;
+    background: linear-gradient(135deg, #00ff66 0%, #00bc44 100%);
+    color: #000000;
+    border: none;
+    padding: 14px;
+    font-weight: bold;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 255, 102, 0.3);
+}
+
+.btn-gamer:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 255, 102, 0.5);
+    background: linear-gradient(135deg, #33ff88 0%, #00ff66 100%);
+}
+
+.btn-gamer:disabled {
+    background: #444;
+    color: #888;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+input, textarea, select {
+    width: 100%;
+    background-color: #161c26;
+    border: 2px solid #242f41;
+    color: #ffffff;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #00ff66;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+}
+
+/* Header das Dashboards */
+.app-header {
+    background-color: #121824;
+    border-bottom: 2px solid #1f2a3c;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-sair {
+    background-color: #ff3333;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.btn-sair:hover {
+    background-color: #cc0000;
+}
+
+/* ==========================================================================
+   TELA 1: AUTENTICAÇÃO (LOGIN / CADASTRO)
+   ========================================================================== */
+#view-auth {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #1a2333 0%, #0b0e14 100%);
+}
+
+#view-auth.active {
+    display: flex;
+}
+
+.auth-container {
+    background-color: #121824;
+    border: 2px solid #242f41;
+    width: 100%;
+    max-width: 420px;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+}
+
+.auth-container h2 {
+    color: #00ff66;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #242f41;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #8899a6;
+    padding: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.tab-btn.active {
+    color: #00ff66;
+    border-bottom: 3px solid #00ff66;
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* ==========================================================================
+   TELA 2: CLIENTE & FORMULÁRIO INTERNO
+   ========================================================================== */
+.box-alerta {
+    background: linear-gradient(135deg, #1f1911 0%, #2c1a04 100%);
+    border: 2px solid #ff9900;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.box-alerta h3 {
+    color: #ff9900;
+    margin-bottom: 8px;
+}
+
+.box-alerta p {
+    margin-bottom: 15px;
+    color: #ccc;
+}
+
+.box-alerta .btn-gamer {
+    background: linear-gradient(135deg, #ffaa00 0%, #e67700 100%);
+    box-shadow: 0 4px 15px rgba(255, 153, 0, 0.3);
+    max-width: 300px;
+}
+
+/* Modal do Formulário de Upload */
+.modal-form {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+.modal-form.active {
+    display: flex;
+}
+
+.modal-form-content {
+    background-color: #121824;
+    border: 2px solid #242f41;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 10px;
+    padding: 25px;
+    animation: scaleUp 0.3s ease;
+}
+
+.modal-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-form-header h3 {
+    color: #00ff66;
+}
+
+.btn-fechar {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.instrucao {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 15px;
+}
+
+/* Área de Drop Zone */
+.drop-zone {
+    border: 2px dashed #242f41;
+    background-color: #161c26;
+    padding: 30px 20px;
+    text-align: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-bottom: 15px;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: #00ff66;
+    background-color: rgba(0, 255, 102, 0.05);
+}
+
+.destaque {
+    color: #00ff66;
+    text-decoration: underline;
+}
+
+.file-info {
+    text-align: center;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    color: #00ff66;
+}
+
+/* Grid de Cards de Jogos */
+.hub-jogos h2 {
+    margin-bottom: 20px;
+    border-left: 4px solid #00ff66;
+    padding-left: 10px;
+}
+
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 25px;
+}
+
+/* Estilo do Card individual */
+.game-card {
+    background-color: #121824;
+    border: 2px solid #1f2a3c;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    border-color: #00ff66;
+    box-shadow: 0 5px 20px rgba(0, 255, 102, 0.2);
+}
+
+.game-card img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+}
+
+.game-card h4 {
+    padding: 15px;
+    text-align: center;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   TELA 3: PAINEL ADMINISTRADOR
+   ========================================================================== */
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+@media (max-width: 850px) {
+    .admin-grid { grid-template-columns: 1fr; }
+}
+
+.admin-box {
+    background-color: #121824;
+    border: 2px solid #1f2a3c;
+    border-radius: 10px;
+    padding: 25px;
+}
+
+.admin-box h3 {
+    margin-bottom: 20px;
+    color: #00ff66;
+    border-bottom: 1px solid #1f2a3c;
+    padding-bottom: 10px;
+}
+
+.admin-box h4 {
+    margin: 15px 0 10px 0;
+    color: #aaa;
+}
+
+.link-group {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 10px;
+}
+
+/* Lista de Usuários no Painel Admin */
+.lista-usuarios {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.user-item {
+    background-color: #161c26;
+    border: 1px solid #242f41;
+    padding: 15px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.user-info p {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 4px;
+}
+
+.btn-inject {
+    background-color: #00ff66;
+    color: #000;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* ==========================================================================
+   JANELA FLUTUANTE (MODAL DETALHES DO JOGO)
+   ========================================================================== */
+.modal-jogos {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-jogos.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #121824;
+    border: 2px solid #00ff66;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    position: relative;
+    padding: 30px;
+    box-shadow: 0 0 30px rgba(0, 255, 102, 0.2);
+    animation: scaleUp 0.3s ease;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px; right: 20px;
+    color: #fff;
+    font-size: 2.5rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.close-modal:hover { color: #ff3333; }
+
+.modal-body {
+    display: flex;
+    gap: 25px;
+    margin-top: 15px;
+}
+
+@media (max-width: 600px) {
+    .modal-body { flex-direction: column; align-items: center; }
+    .modal-content { text-align: center; }
+}
+
+#modal-jogo-capa {
+    width: 220px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #1f2a3c;
+}
+
+.modal-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#modal-jogo-titulo {
+    font-size: 1.6rem;
+    color: #00ff66;
+    margin-bottom: 15px;
+}
+
+#modal-jogo-descricao {
+    color: #b3c0ce;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 25px;
+    white-space: pre-line;
+}
+
+.area-botoes-download {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.btn-download-dinamico {
+    background: linear-gradient(135deg, #161c26 0%, #1f2a3c 100%);
+    border: 1px solid #00ff66;
+    color: #00ff66;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+
+.btn-download-dinamico:hover {
+    background: #00ff66;
+    color: #000;
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
+}
+
+/* ==========================================================================
+   ANIMAÇÕES (EFEITOS VISUAIS)
+   ========================================================================== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
