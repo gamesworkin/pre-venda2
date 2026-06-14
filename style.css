@@ -545,7 +545,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ==========================================================================
-   NOVO: IMPLEMENTAÇÃO DO MENU HORIZONTAL, WHATSAPP E VALOR (PREMIUM)
+   IMPLEMENTAÇÃO DO MENU HORIZONTAL, WHATSAPP E VALOR (PREMIUM)
    ========================================================================== */
 
 /* Menu Horizontal Container */
@@ -676,21 +676,33 @@ input:focus, textarea:focus, select:focus {
     box-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
 }
 
-/* Caixa Admin JSON */
+/* Caixa Construtora Admin Visual */
 .admin-menu-json-box {
     margin-top: 25px;
     padding-top: 20px;
     border-top: 2px dashed #1f2a3c;
 }
 
-.admin-menu-json-box textarea {
-    font-family: monospace;
-    font-size: 0.85rem;
-    color: #00ff66;
+.bloco-categoria-visual {
+    background: #0b0e14;
+    border: 1px solid #242f41;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.linha-subcategoria-visual {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.linha-subcategoria-visual input {
+    margin-bottom: 0 !important;
 }
 
 /* ==========================================================================
-   MEDIA QUERIES - BLINDAGEM MOBILE COMPLETA (Telas até 650px)
+   MEDIA QUERIES - BLINDAGEM MOBILE COMPLETA
    ========================================================================== */
 @media (max-width: 650px) {
     .modal-content {
