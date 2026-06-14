@@ -75,12 +75,14 @@
             text-shadow: 0 0 20px rgba(0, 255, 102, 0.6), 0 0 40px rgba(0, 255, 102, 0.2);
             opacity: 0;
             transform: scale(0.95);
-            transition: all 2s cubic-bezier(0.075, 0.82, 0.165, 1);
+            transition: all 1.5s cubic-bezier(0.075, 0.82, 0.165, 1);
             margin: 20px 0;
+            display: none; /* Começa totalmente invisível na lógica */
             user-select: none;
         }
 
         .senha-stream.revelada {
+            display: block;
             opacity: 1;
             transform: scale(1);
             color: #00ff66;
@@ -206,7 +208,6 @@
                 const centroY = canvas.height / 2;
 
                 if (estadoEfeito === "normal") {
-                    // Fluxo calmo de poeira cósmica subindo lentamente
                     this.y += this.speedY;
                     this.x += this.speedX;
                     if (this.y < 0) {
@@ -215,14 +216,12 @@
                     }
                 } 
                 else if (estadoEfeito === "atrair") {
-                    // Puxa as partículas em velocidade para o centro exato da senha
                     this.x += (centroX - this.x) * 0.06;
                     this.y += (centroY - this.y) * 0.06;
                     this.size = Math.random() * 2.5 + 1;
                     this.alpha = 0.9;
                 } 
                 else if (estadoEfeito === "orbitar") {
-                    // Partículas orbitam e brilham ao redor da senha formada
                     this.angle += this.spinSpeed * 2;
                     this.x += ((centroX + Math.cos(this.angle) * this.radiusDistance) - this.x) * 0.05;
                     this.y += ((centroY + Math.sin(this.angle) * this.radiusDistance * 0.4) - this.y) * 0.05;
@@ -273,10 +272,9 @@
             
             // Inicia compressão magnética de partículas
             estadoEfeito = "atrair";
-            maxParticulas = 180; // Eleva a densidade para formar a senha
+            maxParticulas = 180; 
             init();
 
-            // Transição em etapas para a formação visual
             setTimeout(() => {
                 btnRevelar.style.display = "none";
                 senhaAlvo.classList.add("revelada");
@@ -286,18 +284,18 @@
                 
                 setTimeout(() => {
                     btnCopiar.classList.add("show");
-                }, 600);
+                }, 400);
 
-            }, 1500); // 1.5 segundos de pura convergência de brilhos
+            }, 1200); // Tempo otimizado para a convergência fluida
         });
 
-        // Copiar Premium Clip
+        // Copiar Chave
         btnCopiar.addEventListener("click", () => {
             navigator.clipboard.writeText(senhaAlvo.innerText).then(() => {
                 const textOrig = btnCopiar.innerText;
                 btnCopiar.innerText = "✅ Copiada";
                 btnCopiar.style.borderColor = "#00ff66";
-                btnCopiar.style.color = #00ff66;
+                btnCopiar.style.color = "#00ff66";
                 
                 setTimeout(() => {
                     btnCopiar.innerText = textOrig;
@@ -307,7 +305,7 @@
             });
         });
 
-        // Proteções cirúrgicas de botão direito
+        // Proteções de botão direito
         document.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
     </script>
 </body>
