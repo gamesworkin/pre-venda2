@@ -97,6 +97,7 @@ auth.onAuthStateChanged(user => {
             irParaTela(viewAdmin);
             inicializarPainelAdmin();
             ouvirCardsGlobaisAdmin();
+            ouvirJsonMenuAdmin(); // Carrega o JSON do configurador do menu para o admin
         } else {
             database.ref('usuarios/' + user.uid).on('value', async snapshot => {
                 const dados = snapshot.val();
@@ -134,6 +135,8 @@ auth.onAuthStateChanged(user => {
                     
                     irParaTela(viewCliente);
                     ouvirCardsDoCliente(user.uid);
+                    ouvirEConstruirMenuCliente(); // Constrói o menu suspenso se houver dados ativos
+                    configurarBotaoWhatsappDinamico(); // Inicializa a trava de WhatsApp do cliente
                 }
             });
         }
@@ -222,7 +225,7 @@ document.getElementById('btn-esqueci-senha').addEventListener('click', async () 
 
 // Envio de Comprovante
 document.getElementById('btn-abrir-formulario').addEventListener('click', () => modalFormEnvio.classList.add('active'));
-document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.remove('active'));
+document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.classList.remove('active'));
 
 const inputComprovante = document.getElementById('comprovante');
 const dropZone = document.getElementById('drop-zone');
@@ -278,7 +281,6 @@ function ouvirCardsDoCliente(uid) {
                     cardElement.className = 'game-card';
                     cardElement.innerHTML = `<img src="${card.capa_url}"><h4>${card.titulo}</h4>`;
                     
-                    // CORREÇÃO APLICADA AQUI: Bloqueia o botão direito no card antes mesmo dele ser clicado
                     cardElement.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         return false;
@@ -326,6 +328,100 @@ window.addEventListener('keydown', (e) => {
         if (e.key === "F12" || (e.ctrlKey && (e.shiftKey && e.key === "I" || e.key === "u" || e.key === "U"))) {
             e.preventDefault(); return false;
         }
+    }
+});
+
+// ==========================================================================
+// NOVO: CONSTRUTOR DINÂMICO DO MENU SUSPENSO E CONFIGURADOR WHATSAPP
+// ==========================================================================
+function ouvirEConstruirMenuCliente() {
+    const menuContainer = document.getElementById('area-menu-dinamico');
+    const linksList = document.getElementById('container-links-menu');
+    
+    database.ref('configuracao_menu_json').on('value', snapshot => {
+        linksList.innerHTML = "";
+        const jsonString = snapshot.val() || "";
+        
+        if (!jsonString.trim()) {
+            menuContainer.style.display = "none";
+            return;
+        }
+
+        try {
+            const categorias = JSON.parse(jsonString);
+            if (Array.isArray(categorias) && categorias.length > 0) {
+                categorias.forEach(item => {
+                    const liCat = document.createElement('li');
+                    liCat.className = 'nav-dinamica-item';
+                    
+                    const aCat = document.createElement('a');
+                    aCat.className = 'nav-dinamica-link';
+                    aCat.innerText = item.categoria;
+                    liCat.appendChild(aCat);
+
+                    if (item.subcategorias && Array.isArray(item.subcategorias) && item.subcategorias.length > 0) {
+                        const ulSub = document.createElement('ul');
+                        ulSub.className = 'submenu-dinamico';
+                        
+                        item.subcategorias.forEach(sub => {
+                            const liSub = document.createElement('li');
+                            const aSub = document.createElement('a');
+                            aSub.innerText = sub.texto;
+                            aSub.href = sub.url;
+                            aSub.target = "_blank";
+                            liSub.appendChild(aSub);
+                            ulSub.appendChild(liSub);
+                        });
+                        liCat.appendChild(ulSub);
+                    }
+                    linksList.appendChild(liCat);
+                });
+                menuContainer.style.display = "block";
+            } else {
+                menuContainer.style.display = "none";
+            }
+        } catch (e) {
+            console.error("Erro ao processar JSON do Menu", e);
+            menuContainer.style.display = "none";
+        }
+    });
+}
+
+function configurarBotaoWhatsappDinamico() {
+    // Insira o número do seu WhatsApp aqui futuramente se quiser fixar, ou use a amarração do admin
+    // Por padrão o botão está direcionado para validação rápida.
+    const seuNumeroWhats = "5500000000000"; 
+    const btnWhats = document.getElementById('btn-whatsapp-suporte');
+    btnWhats.href = `https://api.whatsapp.com/send?phone=${seuNumeroWhats}&text=Ol%C3%A1,%20gostaria%20de%20suporte%20no%20Hub!`;
+    btnWhats.style.display = "flex";
+}
+
+// ==========================================================================
+// GESTÃO DE DADOS DO ADMIN (SALVAR MENU JSON)
+// ==========================================================================
+function ouvirJsonMenuAdmin() {
+    database.ref('configuracao_menu_json').once('value', snapshot => {
+        const dados = snapshot.val() || "";
+        document.getElementById('input-json-menu').value = dados;
+    });
+}
+
+document.getElementById('btn-json-menu-salvar-alteracao'); // Salvamento do Trigger
+document.getElementById('btn-salvar-json-menu').addEventListener('click', async () => {
+    const jsonValue = document.getElementById('input-json-menu').value;
+    if (jsonValue.trim()) {
+        try {
+            JSON.parse(jsonValue); // Validação de segurança sintática
+        } catch (err) {
+            alert("⚠️ JSON Inválido! Verifique a falta de chaves, colchetes ou vírgulas estruturais antes de aplicar.");
+            return;
+        }
+    }
+    try {
+        await database.ref('configuracao_menu_json').set(jsonValue);
+        alert("🚀 Estrutura do Menu Horizontal sincronizada com sucesso!");
+    } catch (e) {
+        alert("Erro ao gravar estrutura: " + e.message);
     }
 });
 
@@ -423,7 +519,7 @@ function cancelarEdicaoCard() {
     document.getElementById('form-criar-card').reset();
     document.getElementById('titulo-form-card').innerText = "1. Criar Novo Card de Jogo";
     document.getElementById('btn-cancelar-edicao').style.display = "none";
-    document.getElementById('btn-salvar-card').innerText = "SALVAR CARD";
+    document.getElementById('btn-salvar-card').innerText = "SALVAL CARD";
 }
 document.getElementById('btn-cancelar-edicao').addEventListener('click', cancelarEdicaoCard);
 
@@ -573,7 +669,7 @@ async function injetarCardParaUsuario(uid) {
             await database.ref(`usuarios/${uid}/jogos_liberados/${selectedCardId}`).set(true);
             alert("🔥 Sucesso! Card injetado de forma contínua!");
         } else {
-            alert("Status updated para PAGO!");
+            alert("Status atualizado para PAGO!");
         }
     } catch (error) { alert("Erro: " + error.message); }
 }
@@ -632,7 +728,7 @@ document.getElementById('btn-reset-geral-temporada').addEventListener('click', a
                         }
                     });
                     await database.ref().update(atualizacoesEmLote);
-                    alert("🧹 Hub updated com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
+                    alert("🧹 Hub atualizado com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
                 } else {
                     alert("Nenhum usuário encontrado para limpar.");
                 }
@@ -643,6 +739,17 @@ document.getElementById('btn-reset-geral-temporada').addEventListener('click', a
                 btnReset.innerText = "🧹 LIMPAR TODOS OS APROVADOS (NOVA PRÉ-VENDA)";
                 btnReset.disabled = false;
             }
+        }
+    }
+});
+
+// Trava Global Adicional contra clique direito
+document.addEventListener('contextmenu', (e) => {
+    if (document.getElementById('view-cliente').classList.contains('active')) {
+        const target = e.target.closest('.game-card, .modal-content, img');
+        if (target) {
+            e.preventDefault();
+            return false;
         }
     }
 });
