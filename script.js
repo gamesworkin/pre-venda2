@@ -76,12 +76,14 @@ document.getElementById('tab-solic-pendentes').addEventListener('click', () => {
     filtroAdminAtual = "pendentes";
     document.getElementById('tab-solic-pendentes').classList.add('active');
     document.getElementById('tab-solic-concluidos').classList.remove('active');
+    document.getElementById('container-reset-pre-venda').style.display = "none"; // Oculta o botão de limpar na aba de pendentes
     inicializarPainelAdmin();
 });
 document.getElementById('tab-solic-concluidos').addEventListener('click', () => {
     filtroAdminAtual = "concluidos";
     document.getElementById('tab-solic-concluidos').classList.add('active');
     document.getElementById('tab-solic-pendentes').classList.remove('active');
+    document.getElementById('container-reset-pre-venda').style.display = "block"; // Exibe o botão apenas na aba de Aprovados/Concluídos
     inicializarPainelAdmin();
 });
 
@@ -220,7 +222,7 @@ document.getElementById('btn-esqueci-senha').addEventListener('click', async () 
 
 // Envio de Comprovante
 document.getElementById('btn-abrir-formulario').addEventListener('click', () => modalFormEnvio.classList.add('active'));
-document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.classList.remove('active'));
+document.getElementById('btn-fechar-form').addEventListener('click', () => modalFormEnvio.remove('active'));
 
 const inputComprovante = document.getElementById('comprovante');
 const dropZone = document.getElementById('drop-zone');
@@ -281,9 +283,6 @@ function ouvirCardsDoCliente(uid) {
     });
 }
 
-// ==========================================================================
-// RENDERIZAÇÃO DO MODAL DE DETALHES (PROTEÇÃO CONTRA LINKS NO RODAPÉ APLICADA)
-// ==========================================================================
 function abrirModalJogo(card) {
     const imgCapa = document.getElementById('modal-jogo-capa');
     imgCapa.src = card.capa_url;
@@ -296,17 +295,14 @@ function abrirModalJogo(card) {
     container.innerHTML = "";
     if (card.botoes) {
         card.botoes.forEach(btn => {
-            // CORREÇÃO APLICADA: Criamos uma tag button estilizada que aciona o redirecionamento oculto por clique direto, removendo o href e limpando a visualização do rodapé do navegador.
             const buttonElement = document.createElement('button');
             buttonElement.className = 'btn-download-dinamico';
             buttonElement.innerText = btn.texto;
             buttonElement.style.width = "100%";
             buttonElement.style.cursor = "pointer";
             
-            // Impede arraste do botão
             buttonElement.addEventListener('dragstart', (e) => e.preventDefault());
             
-            // Abre o link em nova aba silenciosamente sem deixar rastro visual no hover do mouse
             buttonElement.addEventListener('click', () => {
                 window.open(btn.url, '_blank');
             });
@@ -351,7 +347,7 @@ document.getElementById('form-criar-card').addEventListener('submit', async (e) 
     try {
         if (idEdicao) {
             await database.ref(`cards_disponiveis/${idEdicao}`).set(dadosCard);
-            alert("🔄 Card updated com sucesso em tempo real!");
+            alert("🔄 Card atualizado com sucesso em tempo real!");
             cancelarEdicaoCard();
         } else {
             await database.ref('cards_disponiveis').push(dadosCard);
@@ -569,7 +565,7 @@ async function injetarCardParaUsuario(uid) {
             await database.ref(`usuarios/${uid}/jogos_liberados/${selectedCardId}`).set(true);
             alert("🔥 Sucesso! Card injetado de forma contínua!");
         } else {
-            alert("Status atualizado para PAGO!");
+            alert("Status updated para PAGO!");
         }
     } catch (error) { alert("Erro: " + error.message); }
 }
@@ -590,3 +586,48 @@ async function excluirSolicitacaoEComprovante(uid) {
         } catch (error) { alert("Erro: " + error.message); }
     }
 }
+
+// NOVO: Ação do Botão de Reset Geral para nova temporada de pré-vendas (Varre todos os usuários em um único lote)
+document.getElementById('btn-reset-geral-temporada').addEventListener('click', async () => {
+    const confirmacao1 = confirm("⚠️ ATENÇÃO MÁXIMA:\n\nVocê está prestes a realizar uma LIMPEZA EM LOTE no painel.\nIsso vai fazer com que TODOS os usuários aprovados voltem a ficar em branco (vazio), prontos para enviar um comprovante para o NOVO card.\n\nOs jogos antigos que eles já possuem NÃO serão perdidos. Deseja continuar?");
+    
+    if (confirmacao1) {
+        const confirmacao2 = confirm("🚨 CONFIRMAÇÃO FINAL:\n\nTem certeza absoluta? Essa ação vai limpar o menu visual de aprovados de uma vez só e não pode ser desfeita.");
+        if (confirmacao2) {
+            try {
+                const btnReset = document.getElementById('btn-reset-geral-temporada');
+                btnReset.innerText = "LIMPANDO BANCO DE DADOS...";
+                btnReset.disabled = true;
+
+                // Busca todos os usuários do banco
+                const snapshot = await database.ref('usuarios').once('value');
+                const usuarios = snapshot.val();
+
+                if (usuarios) {
+                    const atualizacoesEmLote = {};
+                    
+                    Object.keys(usuarios).forEach(uid => {
+                        // Ignora a conta do administrador
+                        if (usuarios[uid].email !== "admin@admin.com") {
+                            // Prepara o reset mantendo a integridade da conta
+                            atualizacoesEmLote[`usuarios/${uid}/status_cadastro`] = "pendente_pagamento";
+                            atualizacoesEmLote[`usuarios/${uid}/comprovante_base64`] = "";
+                        }
+                    });
+
+                    // Aplica as atualizações de uma única vez no Firebase (Multi-path update)
+                    await database.ref().update(atualizacoesEmLote);
+                    alert("🧹 Hub atualizado com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
+                } else {
+                    alert("Nenhum usuário encontrado para limpar.");
+                }
+            } catch (error) {
+                alert("Erro ao realizar o reset geral: " + error.message);
+            } finally {
+                const btnReset = document.getElementById('btn-reset-geral-temporada');
+                btnReset.innerText = "🧹 LIMPAR TODOS OS APROVADOS (NOVA PRÉ-VENDA)";
+                btnReset.disabled = false;
+            }
+        }
+    }
+});
