@@ -701,6 +701,28 @@ input:focus, textarea:focus, select:focus {
     margin-bottom: 0 !important;
 }
 
+/* Seletor Radial de Tipo de Categoria */
+.radio-tipo-container {
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+    font-size: 0.8rem;
+    color: #b3c0ce;
+}
+
+.radio-tipo-container label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.radio-tipo-container input[type="radio"] {
+    width: auto;
+    margin-bottom: 0;
+    accent-color: #00ff66;
+}
+
 /* ==========================================================================
    MEDIA QUERIES - BLINDAGEM MOBILE COMPLETA
    ========================================================================== */
