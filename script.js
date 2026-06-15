@@ -392,7 +392,7 @@ function ouvirEConstruirMenuCliente() {
 }
 
 function inicializarBotaoWhatsApp() {
-    const whatsappNumero = "5500000000000"; 
+    const whatsappNumero = "5588988470190"; 
     document.getElementById('btn-whatsapp-flutuante').href = `https://api.whatsapp.com/send?phone=${whatsappNumero}&text=Ol%C3%A1,%20preciso%20de%20ajuda%20no%20Hub!`;
 }
 
