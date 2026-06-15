@@ -355,9 +355,17 @@ function ouvirEConstruirMenuCliente() {
                     const aCat = document.createElement('a');
                     aCat.className = 'nav-dinamica-link';
                     aCat.innerText = item.categoria;
+
+                    // Se for link direto, atribui comportamento de clique externo
+                    if (item.tipo === "link" && item.url_categoria) {
+                        aCat.href = item.url_categoria;
+                        aCat.target = "_blank";
+                    }
+                    
                     liCat.appendChild(aCat);
 
-                    if (item.subcategorias && Array.isArray(item.subcategorias) && item.subcategorias.length > 0) {
+                    // Se for do tipo menu, renderiza o submenu cascata normalmente
+                    if (item.tipo !== "link" && item.subcategorias && Array.isArray(item.subcategorias) && item.subcategorias.length > 0) {
                         const ulSub = document.createElement('ul');
                         ulSub.className = 'submenu-dinamico';
                         
@@ -392,7 +400,7 @@ function inicializarBotaoWhatsApp() {
 }
 
 // ==========================================================================
-// NOVO: MOTOR CONSTRUTOR VISUAL DE MENU (FORMULÁRIOS AUTOMATIZADOS)
+// NOVO: MOTOR CONSTRUTOR VISUAL DE MENU COM SELEÇÃO RADIAL PREMIUM
 // ==========================================================================
 function ouvirEPovoarMenuVisualAdmin() {
     const containerVisual = document.getElementById('construtor-menu-visual-container');
@@ -407,7 +415,7 @@ function ouvirEPovoarMenuVisualAdmin() {
             const categoriasData = JSON.parse(rawJson);
             if (Array.isArray(categoriasData)) {
                 categoriasData.forEach(cat => {
-                    adicionarBlocoCategoriaVisual(cat.categoria, cat.subcategorias);
+                    adicionarBlocoCategoriaVisual(cat.categoria, cat.subcategorias, cat.tipo || "menu", cat.url_categoria || "");
                 });
             }
         } catch (e) {
@@ -416,7 +424,7 @@ function ouvirEPovoarMenuVisualAdmin() {
     });
 }
 
-function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = []) {
+function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = [], tipoCategoria = "menu", urlCategoria = "") {
     const containerVisual = document.getElementById('construtor-menu-visual-container');
     const blocoId = 'cat-' + Date.now() + Math.floor(Math.random() * 100);
 
@@ -425,14 +433,29 @@ function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = []
     divBloco.id = blocoId;
 
     divBloco.innerHTML = `
-        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items:center;">
+        <div style="display: flex; gap: 10px; margin-bottom: 5px; align-items:center;">
             <input type="text" class="input-nome-categoria" placeholder="Título da Categoria (Ex: 🎁 Conteúdos Bônus)" value="${nomeCategoria}" style="margin-bottom:0; font-weight:bold; border-color:#ffaa00;">
             <button type="button" onclick="removerBlocoCategoriaVisual('${blocoId}')" class="btn-sair" style="margin-top:0; padding:6px 12px; height:38px;">✖</button>
         </div>
-        <div class="container-subcategorias-rows" style="padding-left: 15px; border-left: 2px dashed #242f41;">
-            <!-- Linhas de subcategorias entrarão aqui -->
+        
+        <div class="radio-tipo-container">
+            <label>
+                <input type="radio" name="tipo-${blocoId}" value="menu" ${tipoCategoria === "menu" ? "checked" : ""} onclick="alternarTipoCategoriaVisual('${blocoId}', 'menu')"> 📁 Menu Retrátil (Com Subcategorias)
+            </label>
+            <label>
+                <input type="radio" name="tipo-${blocoId}" value="link" ${tipoCategoria === "link" ? "checked" : ""} onclick="alternarTipoCategoriaVisual('${blocoId}', 'link')"> 🔗 Link Direto
+            </label>
         </div>
-        <button type="button" onclick="adicionarLinhaSubcategoriaVisual('${blocoId}')" class="btn-link" style="color:#00ff66; margin-top: 5px; font-size: 0.8rem; text-align: left; display:block;">+ Adicionar Link/Subcategoria</button>
+
+        <div class="container-url-categoria-direta" style="display: ${tipoCategoria === "link" ? "block" : "none"}; margin-bottom: 10px;">
+            <input type="url" class="input-url-categoria" placeholder="URL de Destino da Categoria (https://...)" value="${urlCategoria}" style="margin-bottom:0; border-color:#00ff66;">
+        </div>
+
+        <div class="wrapper-subcategorias-area" style="display: ${tipoCategoria === "menu" ? "block" : "none"};">
+            <div class="container-subcategorias-rows" style="padding-left: 15px; border-left: 2px dashed #242f41;">
+                </div>
+            <button type="button" onclick="adicionarLinhaSubcategoriaVisual('${blocoId}')" class="btn-link" style="color:#00ff66; margin-top: 5px; font-size: 0.8rem; text-align: left; display:block;">+ Adicionar Link/Subcategoria</button>
+        </div>
     `;
 
     containerVisual.appendChild(divBloco);
@@ -442,6 +465,20 @@ function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = []
         subcategoriasArr.forEach(sub => {
             adicionarLinhaSubcategoriaVisual(blocoId, sub.texto, sub.url);
         });
+    }
+}
+
+function alternarTipoCategoriaVisual(blocoId, tipo) {
+    const bloco = document.getElementById(blocoId);
+    const areaSub = bloco.querySelector('.wrapper-subcategorias-area');
+    const areaUrlDireta = bloco.querySelector('.container-url-categoria-direta');
+    
+    if (tipo === 'link') {
+        areaSub.style.display = 'none';
+        areaUrlDireta.style.display = 'block';
+    } else {
+        areaSub.style.display = 'block';
+        areaUrlDireta.style.display = 'none';
     }
 }
 
@@ -469,7 +506,7 @@ function removerBlocoCategoriaVisual(blocoId) {
     }
 }
 
-// Intercepta o clique de salvar e gera o JSON de forma invisível
+// Intercepta o clique de salvar e gera o JSON de forma invisível adaptado
 document.getElementById('btn-salvar-visual-menu').addEventListener('click', async () => {
     const blocos = document.querySelectorAll('.bloco-categoria-visual');
     const estruturaMenuFinal = [];
@@ -480,28 +517,39 @@ document.getElementById('btn-salvar-visual-menu').addEventListener('click', asyn
         const nomeCat = bloco.querySelector('.input-nome-categoria').value.trim();
         if (!nomeCat) return;
 
+        const tipoSelecionado = bloco.querySelector(`input[name="tipo-${bloco.id}"]:checked`).value;
+        const urlCategoriaDireta = bloco.querySelector('.input-url-categoria').value.trim();
+        
         const subcategorias = [];
-        const linhasSub = bloco.querySelectorAll('.linha-subcategoria-visual');
 
-        linhasSub.forEach(linha => {
-            const txt = linha.querySelector('.sub-txt').value.trim();
-            const url = linha.querySelector('.sub-url').value.trim();
-
-            if (txt && url) {
-                subcategorias.push({ texto: txt, url: url });
-            } else if (txt || url) {
-                dadosValidos = false; // Se preencheu um mas esqueceu o outro
+        if (tipoSelecionado === "link") {
+            if (!urlCategoriaDireta) {
+                dadosValidos = false; // Se escolheu link mas não inseriu URL na categoria principal
             }
-        });
+        } else {
+            const linhasSub = bloco.querySelectorAll('.linha-subcategoria-visual');
+            linhasSub.forEach(linha => {
+                const txt = linha.querySelector('.sub-txt').value.trim();
+                const url = linha.querySelector('.sub-url').value.trim();
+
+                if (txt && url) {
+                    subcategorias.push({ texto: txt, url: url });
+                } else if (txt || url) {
+                    dadosValidos = false; // Se preencheu um mas esqueceu o outro nas subcategorias
+                }
+            });
+        }
 
         estruturaMenuFinal.push({
             categoria: nomeCat,
-            subcategorias: subcategorias
+            tipo: tipoSelecionado,
+            url_categoria: tipoSelecionado === "link" ? urlCategoriaDireta : "",
+            subcategorias: tipoSelecionado === "menu" ? subcategorias : []
         });
     });
 
     if (!dadosValidos) {
-        alert("⚠️ Operação Recusada! Existem links de subcategorias incompletos (com o texto ou a URL vazia). Verifique os campos!");
+        alert("⚠️ Operação Recusada! Existem campos incompletos no construtor. Verifique se esqueceu de inserir a URL direta da categoria ou preencher os campos de subcategorias!");
         return;
     }
 
@@ -510,7 +558,7 @@ document.getElementById('btn-salvar-visual-menu').addEventListener('click', asyn
         const jsonFinalString = estruturaMenuFinal.length > 0 ? JSON.stringify(estruturaMenuFinal, null, 2) : "";
         
         await database.ref('configuracao_menu_json').set(jsonFinalString);
-        alert("🚀 Estrutura de Menu atualizada e publicada com sucesso em tempo real!");
+        alert("🚀 Estrutura de Menu com seleção radial atualizada e publicada com sucesso!");
     } catch (e) {
         alert("Erro ao salvar menu: " + e.message);
     }
@@ -760,7 +808,7 @@ async function injetarCardParaUsuario(uid) {
             await database.ref(`usuarios/${uid}/jogos_liberados/${selectedCardId}`).set(true);
             alert("🔥 Sucesso! Card injetado de forma contínua!");
         } else {
-            alert("Status atualizado para PAGO!");
+            alert("Status updated para PAGO!");
         }
     } catch (error) { alert("Erro: " + error.message); }
 }
