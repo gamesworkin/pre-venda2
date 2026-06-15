@@ -97,7 +97,7 @@ auth.onAuthStateChanged(user => {
             irParaTela(viewAdmin);
             inicializarPainelAdmin();
             ouvirCardsGlobaisAdmin();
-            ouvirEPovoarMenuVisualAdmin(); // Puxa dados salvos e monta os formulários visuais do menu
+            ouvirEPovoarMenuVisualAdmin(); 
         } else {
             database.ref('usuarios/' + user.uid).on('value', async snapshot => {
                 const dados = snapshot.val();
@@ -356,7 +356,6 @@ function ouvirEConstruirMenuCliente() {
                     aCat.className = 'nav-dinamica-link';
                     aCat.innerText = item.categoria;
 
-                    // Se for link direto, atribui comportamento de clique externo
                     if (item.tipo === "link" && item.url_categoria) {
                         aCat.href = item.url_categoria;
                         aCat.target = "_blank";
@@ -364,7 +363,6 @@ function ouvirEConstruirMenuCliente() {
                     
                     liCat.appendChild(aCat);
 
-                    // Se for do tipo menu, renderiza o submenu cascata normalmente
                     if (item.tipo !== "link" && item.subcategorias && Array.isArray(item.subcategorias) && item.subcategorias.length > 0) {
                         const ulSub = document.createElement('ul');
                         ulSub.className = 'submenu-dinamico';
@@ -394,13 +392,12 @@ function ouvirEConstruirMenuCliente() {
 }
 
 function inicializarBotaoWhatsApp() {
-    // Insira seu número de WhatsApp com DDD aqui futuramente
     const whatsappNumero = "5500000000000"; 
     document.getElementById('btn-whatsapp-flutuante').href = `https://api.whatsapp.com/send?phone=${whatsappNumero}&text=Ol%C3%A1,%20preciso%20de%20ajuda%20no%20Hub!`;
 }
 
 // ==========================================================================
-// NOVO: MOTOR CONSTRUTOR VISUAL DE MENU COM SELEÇÃO RADIAL PREMIUM
+// CONSTRUTOR VISUAL DE MENU COM EXCLUSÃO DE CATEGORIAS E SUBCATEGORIAS
 // ==========================================================================
 function ouvirEPovoarMenuVisualAdmin() {
     const containerVisual = document.getElementById('construtor-menu-visual-container');
@@ -435,7 +432,8 @@ function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = []
     divBloco.innerHTML = `
         <div style="display: flex; gap: 10px; margin-bottom: 5px; align-items:center;">
             <input type="text" class="input-nome-categoria" placeholder="Título da Categoria (Ex: 🎁 Conteúdos Bônus)" value="${nomeCategoria}" style="margin-bottom:0; font-weight:bold; border-color:#ffaa00;">
-            <button type="button" onclick="removerBlocoCategoriaVisual('${blocoId}')" class="btn-sair" style="margin-top:0; padding:6px 12px; height:38px;">✖</button>
+            <!-- EXCLUSÃO DA CATEGORIA COMPLETA -->
+            <button type="button" onclick="removerBlocoCategoriaVisual('${blocoId}')" class="btn-sair" style="margin-top:0; padding:6px 12px; height:38px;" title="Excluir Categoria">Deletar</button>
         </div>
         
         <div class="radio-tipo-container">
@@ -453,14 +451,14 @@ function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = []
 
         <div class="wrapper-subcategorias-area" style="display: ${tipoCategoria === "menu" ? "block" : "none"};">
             <div class="container-subcategorias-rows" style="padding-left: 15px; border-left: 2px dashed #242f41;">
-                </div>
+                <!-- Linhas de subcategorias entrarão aqui -->
+            </div>
             <button type="button" onclick="adicionarLinhaSubcategoriaVisual('${blocoId}')" class="btn-link" style="color:#00ff66; margin-top: 5px; font-size: 0.8rem; text-align: left; display:block;">+ Adicionar Link/Subcategoria</button>
         </div>
     `;
 
     containerVisual.appendChild(divBloco);
 
-    // Se existirem subcategorias salvas previamente, povoa as linhas
     if (subcategoriasArr && subcategoriasArr.length > 0) {
         subcategoriasArr.forEach(sub => {
             adicionarLinhaSubcategoriaVisual(blocoId, sub.texto, sub.url);
@@ -468,8 +466,9 @@ function adicionarBlocoCategoriaVisual(nomeCategoria = "", subcategoriasArr = []
     }
 }
 
-function alternarTipoCategoriaVisual(blocoId, tipo) {
+function alternarTipoCategoriaVisual(blocoId) {
     const bloco = document.getElementById(blocoId);
+    const tipo = bloco.querySelector(`input[name="tipo-${blocoId}"]:checked`).value;
     const areaSub = bloco.querySelector('.wrapper-subcategorias-area');
     const areaUrlDireta = bloco.querySelector('.container-url-categoria-direta');
     
@@ -494,23 +493,23 @@ function adicionarLinhaSubcategoriaVisual(blocoId, txtLink = "", urlLink = "") {
     divRow.innerHTML = `
         <input type="text" class="sub-txt" placeholder="Texto do Link" value="${txtLink}" style="flex: 1;">
         <input type="url" class="sub-url" placeholder="URL Destino (https://...)" value="${urlLink}" style="flex: 1.5;">
-        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="btn-sair" style="background:#421414; color:#ff3333; margin-top:0; border:1px solid #ff3333; height:38px; padding:0 10px;">✖</button>
+        <!-- EXCLUSÃO INDIVIDUAL DE SUBCATEGORIA (LINK) -->
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="btn-sair" style="background:#421414; color:#ff3333; margin-top:0; border:1px solid #ff3333; height:38px; padding:0 10px;" title="Remover este link">Excluir</button>
     `;
 
     containerRows.appendChild(divRow);
 }
 
 function removerBlocoCategoriaVisual(blocoId) {
-    if (confirm("Deseja realmente remover toda essa categoria e seus links associados?")) {
+    if (confirm("⚠️ Tem certeza que deseja DELETAR toda essa categoria e todos os links dentro dela?")) {
         document.getElementById(blocoId).remove();
     }
 }
 
-// Intercepta o clique de salvar e gera o JSON de forma invisível adaptado
+// Intercepta o clique de salvar e envia a nova estrutura limpa ao Firebase
 document.getElementById('btn-salvar-visual-menu').addEventListener('click', async () => {
     const blocos = document.querySelectorAll('.bloco-categoria-visual');
     const estruturaMenuFinal = [];
-
     let dadosValidos = true;
 
     blocos.forEach(bloco => {
@@ -519,12 +518,11 @@ document.getElementById('btn-salvar-visual-menu').addEventListener('click', asyn
 
         const tipoSelecionado = bloco.querySelector(`input[name="tipo-${bloco.id}"]:checked`).value;
         const urlCategoriaDireta = bloco.querySelector('.input-url-categoria').value.trim();
-        
         const subcategorias = [];
 
         if (tipoSelecionado === "link") {
             if (!urlCategoriaDireta) {
-                dadosValidos = false; // Se escolheu link mas não inseriu URL na categoria principal
+                dadosValidos = false;
             }
         } else {
             const linhasSub = bloco.querySelectorAll('.linha-subcategoria-visual');
@@ -535,7 +533,7 @@ document.getElementById('btn-salvar-visual-menu').addEventListener('click', asyn
                 if (txt && url) {
                     subcategorias.push({ texto: txt, url: url });
                 } else if (txt || url) {
-                    dadosValidos = false; // Se preencheu um mas esqueceu o outro nas subcategorias
+                    dadosValidos = false;
                 }
             });
         }
@@ -549,16 +547,14 @@ document.getElementById('btn-salvar-visual-menu').addEventListener('click', asyn
     });
 
     if (!dadosValidos) {
-        alert("⚠️ Operação Recusada! Existem campos incompletos no construtor. Verifique se esqueceu de inserir a URL direta da categoria ou preencher os campos de subcategorias!");
+        alert("⚠️ Operação Recusada! Existem campos incompletos no construtor. Verifique as URLs ou subcategorias pendentes.");
         return;
     }
 
     try {
-        // Converte em String JSON limpa e compacta para salvar no Firebase
         const jsonFinalString = estruturaMenuFinal.length > 0 ? JSON.stringify(estruturaMenuFinal, null, 2) : "";
-        
         await database.ref('configuracao_menu_json').set(jsonFinalString);
-        alert("🚀 Estrutura de Menu com seleção radial atualizada e publicada com sucesso!");
+        alert("🚀 Menu Horizontal atualizado com sucesso!");
     } catch (e) {
         alert("Erro ao salvar menu: " + e.message);
     }
@@ -867,7 +863,7 @@ document.getElementById('btn-reset-geral-temporada').addEventListener('click', a
                         }
                     });
                     await database.ref().update(atualizacoesEmLote);
-                    alert("🧹 Hub atualizado com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
+                    alert("🧹 Hub updated com sucesso!\n\nTodos os usuários foram resetados e o painel de aprovados está limpo para a sua nova Pré-Venda!");
                 } else {
                     alert("Nenhum usuário encontrado para limpar.");
                 }
